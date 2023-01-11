@@ -1,0 +1,21 @@
+# https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package]
+name = "sitemaps"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "./lib.rs"
+
+[features]
+reader = []
+writer = ["quick-xml/serialize"]
+serde = ["dep:serde", "quick-xml/serde", "quick-xml/serialize"]
+
+[dependencies]
+quick-xml = { version = "0.27.1", features = ["serde", "serialize"] }
+url = { version = "2.3.1" }
+time = { version = "0.3.17", features = ["parsing"] }
+timext = { path = "../timext" }
+serde = { version = "1.0.152", optional = true, features = ["derive"]}
