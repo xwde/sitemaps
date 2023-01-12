@@ -1,28 +1,36 @@
 use crate::attributes::AsAttribute;
 use std::error::Error;
-use std::fmt::{Display, Formatter};
-use time::OffsetDateTime;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use time::format_description::well_known::Iso8601;
+use time::{error::Parse as TimeError, OffsetDateTime};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Clone)]
-pub struct LastModifiedError;
+pub struct LastModifiedError(TimeError);
 
 impl Display for LastModifiedError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.0.fmt(f)
     }
 }
 
 impl Error for LastModifiedError {}
 
+impl From<TimeError> for LastModifiedError {
+    fn from(error: TimeError) -> Self {
+        Self(error)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct LastModified(OffsetDateTime);
 
 impl LastModified {
-    pub fn parse(date: &str) -> Result<Self, LastModifiedError> {
-        todo!()
+    pub fn parse(date: &str) -> Result<LastModified, LastModifiedError> {
+        let last_modified = OffsetDateTime::parse(date, &Iso8601::DEFAULT)?;
+        Ok(Self::new(last_modified))
     }
 
     pub fn new(date: OffsetDateTime) -> Self {

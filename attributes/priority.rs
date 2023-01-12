@@ -1,7 +1,6 @@
 use crate::attributes::AsAttribute;
 use std::error::Error;
-use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::num::ParseFloatError;
 
 #[cfg(feature = "serde")]
@@ -13,7 +12,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub struct RangeError(pub f32);
 
 impl Display for RangeError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "value {} is out of expected [-1.0, 1.0] bounds", self.0)
     }
 }
@@ -27,7 +26,7 @@ pub enum PriorityError {
 }
 
 impl Display for PriorityError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             PriorityError::ParseError(e) => Display::fmt(&e, f),
             PriorityError::RangeError(e) => Display::fmt(&e, f),
@@ -59,7 +58,7 @@ impl Priority {
         Ok(priority)
     }
 
-    pub fn new(priority: f32) -> Result<Self, RangeError> {
+    fn new(priority: f32) -> Result<Self, RangeError> {
         match priority {
             x if (-1.0..=1.0).contains(&priority) => Ok(Priority(x)),
             x => Err(RangeError(x)),
@@ -73,6 +72,14 @@ impl Priority {
 impl AsAttribute<f32> for Priority {
     fn as_attribute(&self) -> f32 {
         self.0
+    }
+}
+
+impl TryFrom<&str> for Priority {
+    type Error = PriorityError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Priority::parse(value)
     }
 }
 

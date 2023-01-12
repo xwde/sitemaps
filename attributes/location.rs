@@ -1,8 +1,10 @@
 use crate::attributes::AsAttribute;
 use std::error::Error;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use url::{ParseError, Url};
 
+#[cfg(feature = "serde")]
+use serde::de::Error as SerdeError;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -10,8 +12,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub struct LocationError(ParseError);
 
 impl Display for LocationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        self.0.fmt(f)
     }
 }
 
@@ -69,7 +71,8 @@ impl Serialize for Location {
     where
         S: Serializer,
     {
-        todo!()
+        let location = self.0.as_str();
+        serializer.serialize_str(location)
     }
 }
 
@@ -79,6 +82,8 @@ impl<'de> Deserialize<'de> for Location {
     where
         D: Deserializer<'de>,
     {
-        todo!()
+        <&str>::deserialize(deserializer)
+            .map(Self::parse)?
+            .map_err(SerdeError::custom)
     }
 }

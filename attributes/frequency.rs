@@ -1,7 +1,6 @@
 use crate::attributes::AsAttribute;
 use std::error::Error;
-use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use time::{ext::NumericalDuration, Date};
 use timext::ext::NumericMonthDuration;
 
@@ -14,7 +13,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub struct ParseError;
 
 impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "invalid change frequency literal")
     }
 }
@@ -55,7 +54,7 @@ impl ChangeFrequency {
     ///
     /// ```rust
     /// # use time::{Date, Month};
-    /// # use sitemaps::attributes::ChangeFrequency;
+    /// # use sitemaps::attributes::frequency::ChangeFrequency;
     /// let d0 = Date::from_calendar_date(2022, Month::September, 12).unwrap();
     /// let d1 = Date::from_calendar_date(2022, Month::October, 12).unwrap();
     /// let rs = ChangeFrequency::Monthly.next(d0).unwrap();
@@ -77,7 +76,7 @@ impl ChangeFrequency {
     ///
     /// ```rust
     /// # use time::{Date, Month};
-    /// # use sitemaps::attributes::ChangeFrequency;
+    /// # use sitemaps::attributes::frequency::ChangeFrequency;
     /// let d0 = Date::from_calendar_date(2022, Month::September, 12).unwrap();
     /// let d1 = Date::from_calendar_date(2022, Month::October, 12).unwrap();
     /// let rs = ChangeFrequency::Monthly.is_outdated(d0, d1);
