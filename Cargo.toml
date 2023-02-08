@@ -9,9 +9,10 @@ edition = "2021"
 path = "./lib.rs"
 
 [features]
-reader = []
-writer = []
-serde = ["dep:serde", "quick-xml/serde"]
+txt = []
+xml = []
+rss = []
+#serde = ["dep:serde", "quick-xml/serde"]
 
 [dependencies]
 quick-xml = { version = "0.27.1", features = ["serialize"] }

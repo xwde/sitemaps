@@ -9,5 +9,5 @@
 /target/
 **/*.rs.bk
 
-# Playground
+# Other
 playground/
