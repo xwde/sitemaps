@@ -1,5 +1,5 @@
 use crate::attribute::frequency::ChangeFrequency;
-use crate::attribute::location::Location;
+use crate::attribute::location::{Location, LocationError};
 use crate::attribute::modified::LastModified;
 use crate::attribute::priority::Priority;
 
@@ -14,8 +14,8 @@ pub struct SitemapEntry {
 }
 
 impl SitemapEntry {
-    pub fn parse(url: &str) -> Result<Self, ()> {
-        let url = Url::parse(url).unwrap();
+    pub fn parse(url: &str) -> Result<Self, LocationError> {
+        let url = Url::parse(url)?;
         Ok(Self::new(url))
     }
 

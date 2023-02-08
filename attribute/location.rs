@@ -35,6 +35,7 @@ impl Location {
     /// let link = "https://www.google.com/";
     /// let url = Url::parse(link).unwrap();
     /// let location = Location::new(url.clone());
+    ///
     /// assert_eq!(location.as_underlying(), url);
     /// ```
     pub fn new(url: Url) -> Self {
@@ -54,6 +55,7 @@ impl AsAttribute for Location {
     /// let link = "https://www.google.com/";
     /// let url = Url::parse(link).unwrap();
     /// let location = Location::parse(link).unwrap();
+    ///
     /// assert_eq!(location.as_underlying(), url);
     /// ```
     fn parse(location: &str) -> Result<Self, Self::Error> {
@@ -73,6 +75,7 @@ impl AsUnderlying<Url> for Location {
     /// let link = "https://www.google.com/";
     /// let url = Url::parse(link).unwrap();
     /// let location = Location::parse(link).unwrap();
+    ///
     /// assert_eq!(location.as_underlying(), url);
     /// ```
     fn as_underlying(&self) -> Url {

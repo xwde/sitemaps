@@ -1,5 +1,20 @@
 use crate::attribute::{AsAttribute, AsUnderlying};
+
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
 use time::OffsetDateTime;
+
+#[derive(Debug, Clone)]
+pub struct ParseError;
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        todo!()
+    }
+}
+
+impl Error for ParseError {}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct LastModified(OffsetDateTime);
@@ -13,6 +28,7 @@ impl LastModified {
     /// # use sitemaps::attribute::modified::LastModified;
     /// let time: OffsetDateTime = todo!();
     /// let location = LastModified::new(time.clone());
+    ///
     /// assert_eq!(location.as_underlying(), time);
     /// ```
     pub fn new(time: OffsetDateTime) -> Self {
@@ -21,8 +37,19 @@ impl LastModified {
 }
 
 impl AsAttribute for LastModified {
-    type Error = ();
+    type Error = ParseError;
 
+    /// Parses the attribute from the string.
+    ///
+    /// ```rust
+    /// # use time::OffsetDateTime;
+    /// # use sitemaps::attribute::{AsAttribute, AsUnderlying};
+    /// # use sitemaps::attribute::modified::LastModified;
+    /// let time: OffsetDateTime = todo!();
+    /// let last_modified = LastModified::parse(todo!()).unwrap();
+    ///
+    /// assert_eq!(last_modified.as_underlying(), time)
+    /// ```
     fn parse(last_modified: &str) -> Result<Self, Self::Error> {
         todo!()
     }
@@ -37,15 +64,16 @@ impl AsUnderlying<OffsetDateTime> for LastModified {
     /// # use sitemaps::attribute::modified::LastModified;
     /// let time: OffsetDateTime = todo!();
     /// let last_modified = LastModified::new(time).unwrap();
+    ///
     /// assert_eq!(last_modified.as_underlying(), time);
     /// ```
     fn as_underlying(&self) -> OffsetDateTime {
-        self.0.clone()
+        self.0
     }
 }
 
 impl TryFrom<&str> for LastModified {
-    type Error = ();
+    type Error = ParseError;
 
     fn try_from(time: &str) -> Result<Self, Self::Error> {
         Self::parse(time)
