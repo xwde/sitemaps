@@ -6,14 +6,14 @@ use crate::attribute::priority::Priority;
 use url::Url;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct SitemapEntry {
+pub struct SitemapRecord {
     pub location: Location,
     pub last_modified: Option<LastModified>,
     pub change_frequency: Option<ChangeFrequency>,
     pub priority: Option<Priority>,
 }
 
-impl SitemapEntry {
+impl SitemapRecord {
     pub fn parse(url: &str) -> Result<Self, LocationError> {
         let url = Url::parse(url)?;
         Ok(Self::new(url))

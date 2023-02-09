@@ -11,11 +11,10 @@ path = "./lib.rs"
 [features]
 xml = ["dep:quick-xml"]
 rss = ["dep:quick-xml"]
-#serde = ["dep:serde", "quick-xml/serde"]
+atom = ["dep:quick-xml"]
 
 [dependencies]
 quick-xml = { version = "0.27.1", optional = true, features = ["serialize"] }
-url = { version = "2.3.1" }
-#serde = { version = "1.0.152", optional = true, features = ["derive"] }
+url = { version = "2.3.1", features = [] }
 time = { version = "0.3.17", features = ["parsing"] }
-timext = { path = "../timext" }
+timext = { path = "../timext", features = []  }

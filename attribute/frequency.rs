@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use time::{ext::NumericalDuration, Date};
-use timext::ext::NumericMonthDuration;
+use timext::ext::NumericCalendarDuration;
 
 #[derive(Debug, Clone)]
 pub struct ParseError;

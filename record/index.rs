@@ -4,12 +4,12 @@ use crate::attribute::modified::LastModified;
 use url::Url;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct SitemapIndexEntry {
+pub struct IndexRecord {
     pub location: Location,
     pub last_modified: Option<LastModified>,
 }
 
-impl SitemapIndexEntry {
+impl IndexRecord {
     pub fn parse(url: &str) -> Result<Self, LocationError> {
         let url = Url::parse(url)?;
         Ok(Self::new(url))

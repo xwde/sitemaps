@@ -1,12 +1,13 @@
 #### Sitemaps
 
 The implementation of the Sitemap protocol (or URL inclusion protocol) in the
-Rust programming language with the support of video, image, and news extensions
-(according to Google's specifications).
+Rust programming language with the support of `txt`, `xml`, `rss`, `atom`
+formats and `video`, `image`, and `news` extensions (according to Google's
+specifications).
 
 ```rust
-
 ```
+
 #### Links
 
 - [Sitemaps on Wikipedia.org](https://en.wikipedia.org/wiki/Sitemaps)

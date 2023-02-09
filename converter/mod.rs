@@ -1,12 +1,8 @@
-use crate::record::{SitemapEntry, SitemapIndexEntry};
+use crate::record::{IndexRecord, SitemapRecord};
+use std::error::Error;
 
 mod txt;
 pub use txt::*;
-
-#[cfg(feature = "rss")]
-mod rss;
-#[cfg(feature = "rss")]
-pub use rss::*;
 
 #[cfg(feature = "xml")]
 mod xml;
@@ -14,14 +10,34 @@ mod xml;
 pub use xml::*;
 
 pub trait ConvertSitemap {
-    fn deserialize_sitemap<'de>(
+    type DeError: Error;
+    type SeError: Error;
+
+    fn deserialize<'de>(
         &self,
         sitemap: &'de str,
-    ) -> impl Iterator<Item = SitemapEntry> + 'de;
-    fn serialize_sitemap(&self, container: impl Iterator<Item = SitemapEntry>) -> String;
+    ) -> Result<impl Iterator<Item = SitemapRecord> + 'de, Self::DeError>;
+    fn serialize<'se>(
+        &self,
+        records: impl Iterator<Item = &'se SitemapRecord>,
+    ) -> Result<String, Self::SeError>;
 }
 
 pub trait ConvertIndex {
-    fn deserialize_idx<'de>(&self, idx: &'de str) -> impl Iterator<Item = SitemapIndexEntry> + 'de;
-    fn serialize_idx(&self, container: impl Iterator<Item = SitemapIndexEntry>) -> String;
+    type DeError: Error;
+    type SeError: Error;
+
+    fn deserialize_index<'de>(
+        &self,
+        index: &'de str,
+    ) -> Result<impl Iterator<Item = IndexRecord> + 'de, Self::DeError>;
+    fn serialize_index<'se>(
+        &self,
+        records: impl Iterator<Item = &'se IndexRecord>,
+    ) -> Result<String, Self::SeError>;
 }
+
+// pub trait ConvertAuto {
+//     fn deserialize(&self) -> Result<(), ()>;
+//     fn serialize(&self) -> Result<(), ()>;
+// }
