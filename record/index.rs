@@ -21,4 +21,8 @@ impl IndexRecord {
             last_modified: None,
         }
     }
+
+    pub fn replace_last_modified(&mut self, last_modified: Option<LastModified>) {
+        self.last_modified = last_modified;
+    }
 }

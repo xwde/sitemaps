@@ -1,5 +1,6 @@
 use std::error::Error;
 
+pub mod extension;
 pub mod frequency;
 pub mod location;
 pub mod modified;

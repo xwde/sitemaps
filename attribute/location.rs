@@ -102,3 +102,9 @@ impl From<Location> for Url {
         value.as_underlying()
     }
 }
+
+impl Display for Location {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.0)
+    }
+}

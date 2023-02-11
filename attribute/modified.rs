@@ -91,3 +91,9 @@ impl From<LastModified> for OffsetDateTime {
         last_modified.as_underlying()
     }
 }
+
+impl Display for LastModified {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        todo!()
+    }
+}

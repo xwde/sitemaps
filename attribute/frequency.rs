@@ -151,3 +151,9 @@ impl From<ChangeFrequency> for &str {
         frequency.as_underlying()
     }
 }
+
+impl Display for ChangeFrequency {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.as_underlying())
+    }
+}

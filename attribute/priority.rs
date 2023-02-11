@@ -123,3 +123,9 @@ impl From<Priority> for f32 {
         priority.as_underlying()
     }
 }
+
+impl Display for Priority {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.0)
+    }
+}
