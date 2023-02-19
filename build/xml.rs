@@ -1,13 +1,13 @@
-use crate::attribute::AsUnderlying;
-use crate::build::{IndexBuilder, IndexState, SitemapBuilder, SitemapState};
-use crate::record::{IndexRecord, SitemapRecord};
-
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::Write;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Error as XmlError, Writer};
+
+use crate::attribute::AsUnderlying;
+use crate::build::{IndexBuilder, SitemapBuilder};
+use crate::{IndexRecord, SitemapRecord};
 
 #[derive(Debug)]
 pub enum XmlBuilderError {
@@ -30,23 +30,27 @@ impl From<XmlError> for XmlBuilderError {
 
 impl Error for XmlBuilderError {}
 
-pub struct XmlSitemapState<W: Write> {
+pub struct XmlBuilder<W: Write> {
     writer: Writer<W>,
 }
 
-impl<W: Write> XmlSitemapState<W> {
+impl<W: Write> XmlBuilder<W> {
     const XMLNS: [(&'static str, &'static str); 1] =
         [("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")];
 
     const URL_SET: &'static str = "urlset";
     const URL: &'static str = "url";
+
+    const SITEMAP_INDEX: &'static str = "sitemapindex";
+    const SITEMAP: &'static str = "sitemap";
+
     const LOCATION: &'static str = "loc";
     const LAST_MODIFIED: &'static str = "lastmod";
     const CHANGE_FREQUENCY: &'static str = "changefreq";
     const PRIORITY: &'static str = "priority";
 }
 
-impl<W: Write> SitemapState<W> for XmlSitemapState<W> {
+impl<W: Write> SitemapBuilder<W> for XmlBuilder<W> {
     type Error = XmlBuilderError;
 
     fn create(writer: W) -> Result<Self, Self::Error> {
@@ -94,37 +98,19 @@ impl<W: Write> SitemapState<W> for XmlSitemapState<W> {
 
             Ok(())
         })?;
+
         Ok(())
     }
 
     fn finalize(&mut self) -> Result<(), Self::Error> {
         let tag = BytesEnd::new(Self::URL_SET);
         self.writer.write_event(Event::End(tag))?;
+
         Ok(())
     }
 }
 
-pub struct XmlSitemapBuilder {}
-
-impl<W: Write> SitemapBuilder<W> for XmlSitemapBuilder {
-    type State = XmlSitemapState<W>;
-}
-
-pub struct XmlIndexState<W: Write> {
-    writer: Writer<W>,
-}
-
-impl<W: Write> XmlIndexState<W> {
-    const XMLNS: [(&'static str, &'static str); 1] =
-        [("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")];
-
-    const SITEMAP_INDEX: &'static str = "sitemapindex";
-    const SITEMAP: &'static str = "sitemap";
-    const LOCATION: &'static str = "loc";
-    const LAST_MODIFIED: &'static str = "lastmod";
-}
-
-impl<W: Write> IndexState<W> for XmlIndexState<W> {
+impl<W: Write> IndexBuilder<W> for XmlBuilder<W> {
     type Error = XmlBuilderError;
 
     fn create(writer: W) -> Result<Self, Self::Error> {
@@ -157,18 +143,33 @@ impl<W: Write> IndexState<W> for XmlIndexState<W> {
 
             Ok(())
         })?;
+
         Ok(())
     }
 
     fn finalize(&mut self) -> Result<(), Self::Error> {
         let tag = BytesEnd::new(Self::SITEMAP_INDEX);
         self.writer.write_event(Event::End(tag))?;
+
         Ok(())
     }
 }
 
-pub struct XmlIndexBuilder {}
-
-impl<W: Write> IndexBuilder<W> for XmlIndexBuilder {
-    type State = XmlIndexState<W>;
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//
+//     fn create(records: Vec<SitemapRecord>) -> String {
+//         let mut buffer = vec![];
+//         XmlBuilder::build(&mut buffer, records.iter()).unwrap();
+//         String::from_utf8_lossy(buffer.as_slice()).to_string()
+//     }
+//
+//     #[test]
+//     fn create_1() {
+//         let record = SitemapRecord::parse("https://www.example.com/").unwrap();
+//         let records = vec![record.clone(), record.clone(), record.clone()];
+//         let sitemap = create(records);
+//         println!("{}", sitemap);
+//     }
+// }

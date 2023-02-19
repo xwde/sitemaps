@@ -3,4 +3,6 @@
 pub mod attribute;
 pub mod build;
 pub mod parse;
-pub mod record;
+
+mod record;
+pub use record::*;

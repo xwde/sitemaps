@@ -1,10 +1,16 @@
 use std::error::Error;
 
-pub mod extension;
-pub mod frequency;
-pub mod location;
-pub mod modified;
-pub mod priority;
+mod extension;
+mod frequency;
+mod location;
+mod modified;
+mod priority;
+
+pub use self::extension::*;
+pub use self::frequency::*;
+pub use self::location::*;
+pub use self::modified::*;
+pub use self::priority::*;
 
 pub trait AsAttribute {
     type Error: Error;

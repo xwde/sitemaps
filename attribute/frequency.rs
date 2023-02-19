@@ -32,9 +32,8 @@ impl ChangeFrequency {
     /// Creates the attribute from the valid underlying value.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::frequency::ChangeFrequency;
+    /// # use sitemaps::attribute::ChangeFrequency;
     /// let frequency = ChangeFrequency::new("daily");
-    ///
     /// assert_eq!(frequency.unwrap(), ChangeFrequency::Daily);
     /// ```
     pub fn new(frequency: &str) -> Result<Self, ParseError> {
@@ -55,11 +54,10 @@ impl ChangeFrequency {
     ///
     /// ```rust
     /// # use time::{Date, Month};
-    /// # use sitemaps::attribute::frequency::ChangeFrequency;
+    /// # use sitemaps::attribute::ChangeFrequency;
     /// let d0 = Date::from_calendar_date(2022, Month::September, 12).unwrap();
     /// let d1 = Date::from_calendar_date(2022, Month::October, 12).unwrap();
     /// let rs = ChangeFrequency::Monthly.next_date(d0).unwrap();
-    ///
     /// assert_eq!(rs, d1)
     /// ```
     pub fn next_date(&self, date: Date) -> Option<Date> {
@@ -78,11 +76,10 @@ impl ChangeFrequency {
     ///
     /// ```rust
     /// # use time::{Date, Month};
-    /// # use sitemaps::attribute::frequency::ChangeFrequency;
+    /// # use sitemaps::attribute::ChangeFrequency;
     /// let d0 = Date::from_calendar_date(2022, Month::September, 12).unwrap();
     /// let d1 = Date::from_calendar_date(2022, Month::October, 12).unwrap();
     /// let rs = ChangeFrequency::Monthly.is_outdated(d0, d1);
-    ///
     /// assert!(rs)
     /// ```
     pub fn is_outdated(&self, date: Date, now: Date) -> bool {
@@ -104,9 +101,8 @@ impl AsAttribute for ChangeFrequency {
     ///
     /// ``` rust
     /// # use sitemaps::attribute::AsAttribute;
-    /// # use sitemaps::attribute::frequency::ChangeFrequency;
+    /// # use sitemaps::attribute::ChangeFrequency;
     /// let frequency = ChangeFrequency::parse("Daily").unwrap();
-    ///
     /// assert_eq!(frequency, ChangeFrequency::Daily);
     /// ```
     fn parse(frequency: &str) -> Result<Self, Self::Error> {
@@ -119,9 +115,8 @@ impl AsUnderlying<&'static str> for ChangeFrequency {
     ///
     /// ``` rust
     /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::frequency::ChangeFrequency;
+    /// # use sitemaps::attribute::ChangeFrequency;
     /// let frequency = ChangeFrequency::new("daily").unwrap();
-    ///
     /// assert_eq!(frequency.as_underlying(), "daily");
     /// ```
     fn as_underlying(&self) -> &'static str {

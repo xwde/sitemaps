@@ -1,16 +1,37 @@
-use crate::attribute::{AsAttribute, AsUnderlying};
-
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+use time::error::Parse;
+use time::format_description::well_known::Iso8601;
 use time::OffsetDateTime;
+use timext::error::InParse;
 
-#[derive(Debug, Clone)]
-pub struct ParseError;
+use crate::attribute::{AsAttribute, AsUnderlying};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ParseError {
+    CompleteTimestamp(Parse),
+    InCompleteTimestamp(InParse),
+}
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        todo!()
+        match &self {
+            Self::CompleteTimestamp(e) => e.fmt(f),
+            Self::InCompleteTimestamp(e) => e.fmt(f),
+        }
+    }
+}
+
+impl From<Parse> for ParseError {
+    fn from(error: Parse) -> Self {
+        Self::CompleteTimestamp(error)
+    }
+}
+
+impl From<InParse> for ParseError {
+    fn from(error: InParse) -> Self {
+        Self::InCompleteTimestamp(error)
     }
 }
 
@@ -23,13 +44,16 @@ impl LastModified {
     /// Creates the attribute from the valid underlying value.
     ///
     /// ``` rust
+    /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
-    /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::modified::LastModified;
-    /// let time: OffsetDateTime = todo!();
-    /// let location = LastModified::new(time.clone());
+    /// # use sitemaps::attribute::{AsUnderlying, LastModified};
+    /// let timestamp = OffsetDateTime::parse(
+    ///     "1997-07-16T19:20:30.45+01:00",
+    ///     &Iso8601::DEFAULT
+    /// ).unwrap();
     ///
-    /// assert_eq!(location.as_underlying(), time);
+    /// let location = LastModified::new(timestamp.clone());
+    /// assert_eq!(location.as_underlying(), timestamp);
     /// ```
     pub fn new(time: OffsetDateTime) -> Self {
         Self(time)
@@ -42,16 +66,24 @@ impl AsAttribute for LastModified {
     /// Parses the attribute from the string.
     ///
     /// ```rust
+    /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
     /// # use sitemaps::attribute::{AsAttribute, AsUnderlying};
-    /// # use sitemaps::attribute::modified::LastModified;
-    /// let time: OffsetDateTime = todo!();
-    /// let last_modified = LastModified::parse(todo!()).unwrap();
+    /// # use sitemaps::attribute::LastModified;
     ///
-    /// assert_eq!(last_modified.as_underlying(), time)
+    /// let raw = "1997-07-16T19:20:30.45+01:00";
+    /// let timestamp = OffsetDateTime::parse(
+    ///     raw, &Iso8601::DEFAULT
+    /// ).unwrap();
+    ///
+    /// let location = LastModified::parse(raw).unwrap();
+    /// assert_eq!(location.as_underlying(), timestamp);
     /// ```
     fn parse(last_modified: &str) -> Result<Self, Self::Error> {
-        todo!()
+        // TODO use InOffsetDateTime & .into_complete() instead
+        let parsable = &Iso8601::DEFAULT;
+        let last_modified = OffsetDateTime::parse(last_modified, parsable)?;
+        Ok(Self::new(last_modified))
     }
 }
 
@@ -59,13 +91,16 @@ impl AsUnderlying<OffsetDateTime> for LastModified {
     /// Returns the valid underlying value of the attribute.
     ///
     /// ``` rust
+    /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
-    /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::modified::LastModified;
-    /// let time: OffsetDateTime = todo!();
-    /// let last_modified = LastModified::new(time).unwrap();
+    /// # use sitemaps::attribute::{AsUnderlying, LastModified};
+    /// let timestamp = OffsetDateTime::parse(
+    ///     "1997-07-16T19:20:30.45+01:00",
+    ///     &Iso8601::DEFAULT
+    /// ).unwrap();
     ///
-    /// assert_eq!(last_modified.as_underlying(), time);
+    /// let location = LastModified::new(timestamp.clone());
+    /// assert_eq!(location.as_underlying(), timestamp);
     /// ```
     fn as_underlying(&self) -> OffsetDateTime {
         self.0
@@ -93,7 +128,12 @@ impl From<LastModified> for OffsetDateTime {
 }
 
 impl Display for LastModified {
+    ///
+    ///
+    /// ```rust
+    /// ```
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        todo!()
+        // TODO use InOffsetDateTime instead
+        write!(f, "{}", self.0.format(&Iso8601::DEFAULT).unwrap())
     }
 }

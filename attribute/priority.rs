@@ -52,9 +52,8 @@ impl Priority {
     ///
     /// ``` rust
     /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::priority::Priority;
+    /// # use sitemaps::attribute::Priority;
     /// let frequency = Priority::new(0.5f32).unwrap();
-    ///
     /// assert_eq!(frequency.as_underlying(), 0.5f32);
     /// ```
     pub fn new(priority: f32) -> Result<Self, RangeError> {
@@ -75,9 +74,8 @@ impl AsAttribute for Priority {
     ///
     /// ``` rust
     /// # use sitemaps::attribute::{AsAttribute, AsUnderlying};
-    /// # use sitemaps::attribute::priority::Priority;
+    /// # use sitemaps::attribute::Priority;
     /// let frequency = Priority::parse("0.5").unwrap();
-    ///
     /// assert_eq!(frequency.as_underlying(), 0.5f32);
     /// ```
     fn parse(priority: &str) -> Result<Self, Self::Error> {
@@ -92,9 +90,8 @@ impl AsUnderlying<f32> for Priority {
     ///
     /// ``` rust
     /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::priority::Priority;
+    /// # use sitemaps::attribute::Priority;
     /// let frequency = Priority::new(0.5f32).unwrap();
-    ///
     /// assert_eq!(frequency.as_underlying(), 0.5f32);
     /// ```
     fn as_underlying(&self) -> f32 {

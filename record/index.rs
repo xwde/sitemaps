@@ -1,5 +1,5 @@
-use crate::attribute::location::{Location, LocationError};
-use crate::attribute::modified::LastModified;
+use crate::attribute::LastModified;
+use crate::attribute::{Location, LocationError};
 
 use url::Url;
 
@@ -21,8 +21,11 @@ impl IndexRecord {
             last_modified: None,
         }
     }
+}
 
-    pub fn replace_last_modified(&mut self, last_modified: Option<LastModified>) {
-        self.last_modified = last_modified;
+impl IndexRecord {
+    pub fn replace_last_modified(&mut self, last_modified: LastModified) -> &mut Self {
+        self.last_modified = Some(last_modified);
+        self
     }
 }

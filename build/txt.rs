@@ -1,10 +1,10 @@
-use crate::attribute::AsUnderlying;
-use crate::build::{SitemapBuilder, SitemapState};
-use crate::record::{SitemapRecord, BYTES_LIMIT, RECORDS_LIMIT};
-
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::{Error as IoError, Write};
+
+use crate::attribute::AsUnderlying;
+use crate::build::SitemapBuilder;
+use crate::{SitemapRecord, BYTES_LIMIT, RECORDS_LIMIT};
 
 #[derive(Debug)]
 pub enum TxtBuilderError {
@@ -15,7 +15,11 @@ pub enum TxtBuilderError {
 
 impl Display for TxtBuilderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        todo!()
+        match &self {
+            Self::TooManyRecords(e) => todo!(),
+            Self::TooManyBytes(e) => todo!(),
+            Self::IoError(e) => Display::fmt(&e, f),
+        }
     }
 }
 
@@ -28,17 +32,17 @@ impl From<IoError> for TxtBuilderError {
 impl Error for TxtBuilderError {}
 
 #[derive(Debug)]
-pub struct TxtSitemapState<W: Write> {
+pub struct TxtBuilder<W: Write> {
     bytes: usize,
     records: usize,
     writer: W,
 }
 
-impl<W: Write> TxtSitemapState<W> {
+impl<W: Write> TxtBuilder<W> {
     const NEWLINE: &'static [u8] = "\n".as_bytes();
 }
 
-impl<W: Write> SitemapState<W> for TxtSitemapState<W> {
+impl<W: Write> SitemapBuilder<W> for TxtBuilder<W> {
     type Error = TxtBuilderError;
 
     fn create(writer: W) -> Result<Self, Self::Error> {
@@ -75,11 +79,4 @@ impl<W: Write> SitemapState<W> for TxtSitemapState<W> {
     fn finalize(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
-}
-
-#[derive(Debug)]
-pub struct TxtSitemapBuilder {}
-
-impl<W: Write> SitemapBuilder<W> for TxtSitemapBuilder {
-    type State = TxtSitemapState<W>;
 }

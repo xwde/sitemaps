@@ -1,7 +1,7 @@
-use crate::attribute::frequency::ChangeFrequency;
-use crate::attribute::location::{Location, LocationError};
-use crate::attribute::modified::LastModified;
-use crate::attribute::priority::Priority;
+use crate::attribute::ChangeFrequency;
+use crate::attribute::LastModified;
+use crate::attribute::Priority;
+use crate::attribute::{Location, LocationError};
 
 use url::Url;
 
@@ -26,5 +26,22 @@ impl SitemapRecord {
             change_frequency: None,
             priority: None,
         }
+    }
+}
+
+impl SitemapRecord {
+    pub fn replace_last_modified(&mut self, last_modified: LastModified) -> &mut Self {
+        self.last_modified = Some(last_modified);
+        self
+    }
+
+    pub fn replace_change_frequency(&mut self, change_frequency: ChangeFrequency) -> &mut Self {
+        self.change_frequency = Some(change_frequency);
+        self
+    }
+
+    pub fn replace_priority(&mut self, priority: Priority) -> &mut Self {
+        self.priority = Some(priority);
+        self
     }
 }
