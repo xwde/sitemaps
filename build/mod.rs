@@ -4,17 +4,12 @@ use std::io::Write;
 use crate::{IndexRecord, SitemapRecord};
 
 mod txt;
-pub use txt::{TxtBuilder, TxtBuilderError};
+pub use txt::*;
 
 #[cfg(feature = "xml")]
 mod xml;
 #[cfg(feature = "xml")]
-pub use xml::{XmlBuilder, XmlBuilderError};
-
-#[cfg(feature = "rss")]
-mod rss;
-#[cfg(feature = "rss")]
-pub use rss::{RssBuilder, RssBuilderError};
+pub use xml::*;
 
 pub trait SitemapBuilder<W: Write>: Sized {
     type Error: Error;
@@ -36,13 +31,13 @@ pub trait SitemapBuilder<W: Write>: Sized {
     fn finalize(self) -> Result<W, Self::Error>;
 }
 
-pub trait SitemapBuilderString: SitemapBuilder<Vec<u8>> {
+pub trait SitemapStringBuilder: SitemapBuilder<Vec<u8>> {
     fn build_string<'re>(
         records: impl Iterator<Item = &'re SitemapRecord>,
     ) -> Result<String, Self::Error>;
 }
 
-impl<T> SitemapBuilderString for T
+impl<T> SitemapStringBuilder for T
 where
     T: SitemapBuilder<Vec<u8>>,
 {
@@ -75,13 +70,13 @@ pub trait IndexBuilder<W: Write>: Sized {
     fn finalize(self) -> Result<W, Self::Error>;
 }
 
-pub trait IndexBuilderString: IndexBuilder<Vec<u8>> {
+pub trait IndexStringBuilder: IndexBuilder<Vec<u8>> {
     fn build_index_string<'re>(
         records: impl Iterator<Item = &'re IndexRecord>,
     ) -> Result<String, Self::Error>;
 }
 
-impl<T> IndexBuilderString for T
+impl<T> IndexStringBuilder for T
 where
     T: IndexBuilder<Vec<u8>>,
 {

@@ -1,8 +1,11 @@
-### Sitemaps
+### xwde: sitemaps
+
+> **Warning**
+> the library is in active development, so expect breaking changes.
 
 The implementation of the Sitemap protocol (or URL inclusion protocol) in the
-Rust programming language with the support of `txt`, `xml`, `rss` formats and
-`video`, `image`, and `news` extensions (according to Google's specifications).
+Rust programming language with the support of `txt`, `xml` formats and `video`,
+`image`, `news` extensions (according to the Google's spec).
 
 #### Parser
 
@@ -15,7 +18,7 @@ fn main() {
 #### Builder
 
 ```rust
-use sitemaps::build::{SitemapBuilderString, XmlBuilder};
+use sitemaps::build::{SitemapStringBuilder, XmlBuilder};
 use sitemaps::SitemapRecord;
 
 fn main() {

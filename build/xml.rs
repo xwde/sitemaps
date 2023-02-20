@@ -11,14 +11,18 @@ use crate::{IndexRecord, SitemapRecord};
 
 #[derive(Debug)]
 pub enum XmlBuilderError {
-    TooManyRecords(usize),
+    TooManyRecords,
     TooManyBytes(usize),
     XmlError(XmlError),
 }
 
 impl Display for XmlBuilderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        todo!()
+        match &self {
+            Self::TooManyRecords => write!(f, "too many records"),
+            Self::TooManyBytes(n) => write!(f, "too many bytes: {n}"),
+            Self::XmlError(e) => Display::fmt(&e, f),
+        }
     }
 }
 
@@ -30,10 +34,10 @@ impl From<XmlError> for XmlBuilderError {
 
 impl Error for XmlBuilderError {}
 
-///
+/// Xml Sitemap & Index Builder.
 ///
 /// ```rust
-/// # use sitemaps::build::{SitemapBuilderString, XmlBuilder};
+/// # use sitemaps::build::{SitemapStringBuilder, XmlBuilder};
 /// # use sitemaps::SitemapRecord;
 /// let uri = "https://www.example.com/";
 /// let record = SitemapRecord::parse(uri).unwrap();
@@ -104,7 +108,7 @@ impl<W: Write> SitemapBuilder<W> for XmlBuilder<W> {
                 tag.write_text_content(BytesText::new(priority))?;
             }
 
-            // TODO other tags
+            // TODO extension tags
 
             Ok(())
         })?;

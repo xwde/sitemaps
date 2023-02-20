@@ -8,7 +8,7 @@ use crate::{SitemapRecord, BYTES_LIMIT, RECORDS_LIMIT};
 
 #[derive(Debug)]
 pub enum TxtBuilderError {
-    TooManyRecords(usize),
+    TooManyRecords,
     TooManyBytes(usize),
     IoError(IoError),
 }
@@ -16,8 +16,8 @@ pub enum TxtBuilderError {
 impl Display for TxtBuilderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match &self {
-            Self::TooManyRecords(e) => todo!(),
-            Self::TooManyBytes(e) => todo!(),
+            Self::TooManyRecords => write!(f, "too many records"),
+            Self::TooManyBytes(n) => write!(f, "too many bytes: {n}"),
             Self::IoError(e) => Display::fmt(&e, f),
         }
     }
@@ -31,10 +31,10 @@ impl From<IoError> for TxtBuilderError {
 
 impl Error for TxtBuilderError {}
 
-///
+/// Txt Sitemap Builder.
 ///
 /// ```rust
-/// # use sitemaps::build::{SitemapBuilderString, TxtBuilder};
+/// # use sitemaps::build::{SitemapStringBuilder, TxtBuilder};
 /// # use sitemaps::SitemapRecord;
 /// let uri = "https://www.example.com/";
 /// let record = SitemapRecord::parse(uri).unwrap();
@@ -65,7 +65,7 @@ impl<W: Write> SitemapBuilder<W> for TxtBuilder<W> {
 
     fn next(&mut self, record: &SitemapRecord) -> Result<(), Self::Error> {
         if self.records + 1 > RECORDS_LIMIT {
-            return Err(TxtBuilderError::TooManyRecords(self.records + 1));
+            return Err(TxtBuilderError::TooManyRecords);
         }
 
         let record = record.location.as_underlying();
