@@ -1,10 +1,30 @@
-#### Sitemaps
+### Sitemaps
 
 The implementation of the Sitemap protocol (or URL inclusion protocol) in the
 Rust programming language with the support of `txt`, `xml`, `rss` formats and
 `video`, `image`, and `news` extensions (according to Google's specifications).
 
+#### Parser
+
 ```rust
+fn main() {
+  
+}
+```
+
+#### Builder
+
+```rust
+use sitemaps::build::{SitemapBuilderString, XmlBuilder};
+use sitemaps::SitemapRecord;
+
+fn main() {
+    let uri = "https://www.example.com/";
+    let record = SitemapRecord::parse(uri).unwrap();
+    let records = vec![record /* & more records... */];
+    let sitemap = XmlBuilder::build_string(records.iter()).unwrap();
+    println!("{}", sitemap);
+}
 ```
 
 #### Links

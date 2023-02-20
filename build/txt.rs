@@ -31,6 +31,16 @@ impl From<IoError> for TxtBuilderError {
 
 impl Error for TxtBuilderError {}
 
+///
+///
+/// ```rust
+/// # use sitemaps::build::{SitemapBuilderString, TxtBuilder};
+/// # use sitemaps::SitemapRecord;
+/// let uri = "https://www.example.com/";
+/// let record = SitemapRecord::parse(uri).unwrap();
+/// let records = vec![record /* & more records... */];
+/// let sitemap = TxtBuilder::build_string(records.iter()).unwrap();
+/// ```
 #[derive(Debug)]
 pub struct TxtBuilder<W: Write> {
     bytes: usize,
@@ -76,7 +86,7 @@ impl<W: Write> SitemapBuilder<W> for TxtBuilder<W> {
         Ok(())
     }
 
-    fn finalize(&mut self) -> Result<(), Self::Error> {
-        Ok(())
+    fn finalize(mut self) -> Result<W, Self::Error> {
+        Ok(self.writer)
     }
 }

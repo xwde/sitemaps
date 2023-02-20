@@ -33,7 +33,7 @@ impl<W: Write> SitemapBuilder<W> for RssBuilder<W> {
         todo!()
     }
 
-    fn finalize(&mut self) -> Result<(), Self::Error> {
+    fn finalize(mut self) -> Result<W, Self::Error> {
         todo!()
     }
 }

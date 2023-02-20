@@ -30,6 +30,16 @@ impl From<XmlError> for XmlBuilderError {
 
 impl Error for XmlBuilderError {}
 
+///
+///
+/// ```rust
+/// # use sitemaps::build::{SitemapBuilderString, XmlBuilder};
+/// # use sitemaps::SitemapRecord;
+/// let uri = "https://www.example.com/";
+/// let record = SitemapRecord::parse(uri).unwrap();
+/// let records = vec![record /* & more records... */];
+/// let sitemap = XmlBuilder::build_string(records.iter()).unwrap();
+/// ```
 pub struct XmlBuilder<W: Write> {
     writer: Writer<W>,
 }
@@ -102,11 +112,11 @@ impl<W: Write> SitemapBuilder<W> for XmlBuilder<W> {
         Ok(())
     }
 
-    fn finalize(&mut self) -> Result<(), Self::Error> {
+    fn finalize(mut self) -> Result<W, Self::Error> {
         let tag = BytesEnd::new(Self::URL_SET);
         self.writer.write_event(Event::End(tag))?;
 
-        Ok(())
+        Ok(self.writer.into_inner())
     }
 }
 
@@ -147,29 +157,10 @@ impl<W: Write> IndexBuilder<W> for XmlBuilder<W> {
         Ok(())
     }
 
-    fn finalize(&mut self) -> Result<(), Self::Error> {
+    fn finalize(mut self) -> Result<W, Self::Error> {
         let tag = BytesEnd::new(Self::SITEMAP_INDEX);
         self.writer.write_event(Event::End(tag))?;
 
-        Ok(())
+        Ok(self.writer.into_inner())
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     fn create(records: Vec<SitemapRecord>) -> String {
-//         let mut buffer = vec![];
-//         XmlBuilder::build(&mut buffer, records.iter()).unwrap();
-//         String::from_utf8_lossy(buffer.as_slice()).to_string()
-//     }
-//
-//     #[test]
-//     fn create_1() {
-//         let record = SitemapRecord::parse("https://www.example.com/").unwrap();
-//         let records = vec![record.clone(), record.clone(), record.clone()];
-//         let sitemap = create(records);
-//         println!("{}", sitemap);
-//     }
-// }
