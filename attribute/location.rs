@@ -1,9 +1,9 @@
-use crate::attribute::{AsAttribute, AsUnderlying};
-
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use url::{ParseError, Url};
+
+use crate::attribute::{AsAttribute, AsUnderlying};
 
 #[derive(Debug, Clone)]
 pub struct LocationError(ParseError);

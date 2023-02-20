@@ -9,12 +9,12 @@ use timext::error::InParse;
 use crate::attribute::{AsAttribute, AsUnderlying};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ParseError {
+pub enum LastModifiedError {
     CompleteTimestamp(Parse),
     InCompleteTimestamp(InParse),
 }
 
-impl Display for ParseError {
+impl Display for LastModifiedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match &self {
             Self::CompleteTimestamp(e) => e.fmt(f),
@@ -23,19 +23,19 @@ impl Display for ParseError {
     }
 }
 
-impl From<Parse> for ParseError {
+impl From<Parse> for LastModifiedError {
     fn from(error: Parse) -> Self {
         Self::CompleteTimestamp(error)
     }
 }
 
-impl From<InParse> for ParseError {
+impl From<InParse> for LastModifiedError {
     fn from(error: InParse) -> Self {
         Self::InCompleteTimestamp(error)
     }
 }
 
-impl Error for ParseError {}
+impl Error for LastModifiedError {}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct LastModified(OffsetDateTime);
@@ -61,7 +61,7 @@ impl LastModified {
 }
 
 impl AsAttribute for LastModified {
-    type Error = ParseError;
+    type Error = LastModifiedError;
 
     /// Parses the attribute from the string.
     ///
@@ -108,7 +108,7 @@ impl AsUnderlying<OffsetDateTime> for LastModified {
 }
 
 impl TryFrom<&str> for LastModified {
-    type Error = ParseError;
+    type Error = LastModifiedError;
 
     fn try_from(time: &str) -> Result<Self, Self::Error> {
         Self::parse(time)

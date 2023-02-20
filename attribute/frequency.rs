@@ -7,15 +7,15 @@ use time::{ext::NumericalDuration, Date};
 use timext::ext::NumericCalendarDuration;
 
 #[derive(Debug, Clone)]
-pub struct ParseError;
+pub struct ChangeFrequencyError;
 
-impl Display for ParseError {
+impl Display for ChangeFrequencyError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "invalid change frequency literal")
     }
 }
 
-impl Error for ParseError {}
+impl Error for ChangeFrequencyError {}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ChangeFrequency {
@@ -36,7 +36,7 @@ impl ChangeFrequency {
     /// let frequency = ChangeFrequency::new("daily");
     /// assert_eq!(frequency.unwrap(), ChangeFrequency::Daily);
     /// ```
-    pub fn new(frequency: &str) -> Result<Self, ParseError> {
+    pub fn new(frequency: &str) -> Result<Self, ChangeFrequencyError> {
         use ChangeFrequency::*;
         match frequency {
             "always" => Ok(Always),
@@ -46,7 +46,7 @@ impl ChangeFrequency {
             "monthly" => Ok(Monthly),
             "yearly" => Ok(Yearly),
             "never" => Ok(Never),
-            _ => Err(ParseError),
+            _ => Err(ChangeFrequencyError),
         }
     }
 
@@ -95,7 +95,7 @@ impl ChangeFrequency {
 }
 
 impl AsAttribute for ChangeFrequency {
-    type Error = ParseError;
+    type Error = ChangeFrequencyError;
 
     /// Parses the attribute from the string.
     ///
@@ -134,7 +134,7 @@ impl AsUnderlying<&'static str> for ChangeFrequency {
 }
 
 impl TryFrom<&str> for ChangeFrequency {
-    type Error = ParseError;
+    type Error = ChangeFrequencyError;
 
     fn try_from(frequency: &str) -> Result<Self, Self::Error> {
         ChangeFrequency::new(frequency)

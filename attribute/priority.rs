@@ -5,20 +5,20 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::num::ParseFloatError;
 
 #[derive(Debug, Clone)]
-pub struct RangeError(pub f32);
+pub struct PriorityRangeError(pub f32);
 
-impl Display for RangeError {
+impl Display for PriorityRangeError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "value {} is out of expected [-1.0, 1.0] bounds", self.0)
     }
 }
 
-impl Error for RangeError {}
+impl Error for PriorityRangeError {}
 
 #[derive(Debug, Clone)]
 pub enum PriorityError {
     ParseError(ParseFloatError),
-    RangeError(RangeError),
+    RangeError(PriorityRangeError),
 }
 
 impl Display for PriorityError {
@@ -38,8 +38,8 @@ impl From<ParseFloatError> for PriorityError {
     }
 }
 
-impl From<RangeError> for PriorityError {
-    fn from(value: RangeError) -> Self {
+impl From<PriorityRangeError> for PriorityError {
+    fn from(value: PriorityRangeError) -> Self {
         PriorityError::RangeError(value)
     }
 }
@@ -56,10 +56,10 @@ impl Priority {
     /// let frequency = Priority::new(0.5f32).unwrap();
     /// assert_eq!(frequency.as_underlying(), 0.5f32);
     /// ```
-    pub fn new(priority: f32) -> Result<Self, RangeError> {
+    pub fn new(priority: f32) -> Result<Self, PriorityRangeError> {
         match priority {
             x if (-1.0..=1.0).contains(&priority) => Ok(Self(x)),
-            x => Err(RangeError(x)),
+            x => Err(PriorityRangeError(x)),
         }
     }
 
@@ -108,7 +108,7 @@ impl TryFrom<&str> for Priority {
 }
 
 impl TryFrom<f32> for Priority {
-    type Error = RangeError;
+    type Error = PriorityRangeError;
 
     fn try_from(priority: f32) -> Result<Self, Self::Error> {
         Priority::new(priority)

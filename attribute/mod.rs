@@ -6,7 +6,10 @@ mod location;
 mod modified;
 mod priority;
 
-pub use self::extension::*;
+pub mod ext {
+    pub use self::super::extension::*;
+}
+
 pub use self::frequency::*;
 pub use self::location::*;
 pub use self::modified::*;
