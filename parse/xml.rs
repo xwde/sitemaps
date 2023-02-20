@@ -1,9 +1,10 @@
-use quick_xml::Reader;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::Read;
 
-use crate::parse::{SitemapParser, SitemapState};
+use quick_xml::Reader;
+
+use crate::parse::SitemapParser;
 use crate::SitemapRecord;
 
 #[derive(Debug)]
@@ -17,24 +18,19 @@ impl Display for XmlParserError {
 
 impl Error for XmlParserError {}
 
-pub struct XmlState<R: Read> {
+pub struct XmlParser<R: Read> {
     reader: Reader<R>,
 }
 
-impl<R: Read> SitemapState<R> for XmlState<R> {
+impl<R: Read> SitemapParser<R> for XmlParser<R> {
     type Error = XmlParserError;
 
     fn create(reader: R) -> Result<Self, Self::Error> {
-        todo!()
+        let reader = Reader::from_reader(reader);
+        Ok(Self { reader })
     }
 
     fn next(&mut self) -> Result<Option<SitemapRecord>, Self::Error> {
         todo!()
     }
-}
-
-pub struct XmlParser {}
-
-impl<R: Read> SitemapParser<R> for XmlParser {
-    type State = XmlState<R>;
 }
