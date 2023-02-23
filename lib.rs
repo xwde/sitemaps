@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
 
-pub mod attribute;
-pub mod build;
-pub mod parse;
-
+mod build;
+mod parse;
 mod record;
+
+pub use build::*;
+pub use parse::*;
 pub use record::*;

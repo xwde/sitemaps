@@ -1,9 +1,6 @@
-use std::error::Error;
-use std::io::Read;
-
-use crate::{IndexRecord, SitemapRecord};
-
+#[cfg(feature = "txt")]
 mod txt;
+#[cfg(feature = "txt")]
 pub use txt::*;
 
 #[cfg(feature = "xml")]
@@ -11,31 +8,19 @@ mod xml;
 #[cfg(feature = "xml")]
 pub use xml::*;
 
-#[cfg(feature = "rss")]
-mod rss;
-#[cfg(feature = "rss")]
-pub use rss::*;
+use std::error::Error;
+use std::io::Read;
 
-pub trait SitemapParser<R: Read>: Sized {
+use crate::Record;
+
+pub trait Parser<R: Read, D: Record>: Sized {
     type Error: Error;
 
-    fn parse(reader: R) -> Result<(), Self::Error> {
-        todo!()
-    }
+    // fn parse(reader: R) -> Result<(), Self::Error> {
+    //     todo!()
+    // }
 
-    fn create(reader: R) -> Result<Self, Self::Error>;
-    fn next(&mut self) -> Result<Option<SitemapRecord>, Self::Error>;
+    fn initialize(reader: R) -> Result<Self, Self::Error>;
+    fn next(&mut self) -> Result<Option<D>, Self::Error>;
+    fn finalize(self) -> Result<R, Self::Error>;
 }
-
-pub trait IndexParser<R: Read>: Sized {
-    type Error: Error;
-
-    fn parse(reader: R) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    fn create(reader: R) -> Result<Self, Self::Error>;
-    fn next(&mut self) -> Result<Option<IndexRecord>, Self::Error>;
-}
-
-// pub trait AutoParser<R: Read>: SitemapParser<R> + IndexParser<R> {}

@@ -1,31 +1,31 @@
 use crate::attribute::LastModified;
-use crate::attribute::{Location, LocationError};
+use crate::attribute::Location;
+use crate::Record;
 
-use url::Url;
-
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IndexRecord {
     pub location: Location,
     pub last_modified: Option<LastModified>,
 }
 
-impl IndexRecord {
-    pub fn parse(url: &str) -> Result<Self, LocationError> {
-        let url = Url::parse(url)?;
-        Ok(Self::new(url))
-    }
-
-    pub fn new(url: Url) -> Self {
+impl Record for IndexRecord {
+    fn new(location: Location) -> Self {
         Self {
-            location: Location::new(url),
+            location,
             last_modified: None,
         }
     }
 }
 
 impl IndexRecord {
-    pub fn replace_last_modified(&mut self, last_modified: LastModified) -> &mut Self {
-        self.last_modified = Some(last_modified);
+    pub fn with_timestamp(&mut self, modified: LastModified) -> &mut Self {
+        self.last_modified = Some(modified);
         self
+    }
+}
+
+impl From<Location> for IndexRecord {
+    fn from(location: Location) -> Self {
+        Self::new(location)
     }
 }

@@ -1,10 +1,10 @@
-use crate::attribute::{AsAttribute, AsUnderlying};
-
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::num::ParseFloatError;
 
-#[derive(Debug, Clone)]
+use crate::attribute::Attribute;
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct PriorityRangeError(pub f32);
 
 impl Display for PriorityRangeError {
@@ -15,7 +15,7 @@ impl Display for PriorityRangeError {
 
 impl Error for PriorityRangeError {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PriorityError {
     ParseError(ParseFloatError),
     RangeError(PriorityRangeError),
@@ -30,8 +30,6 @@ impl Display for PriorityError {
     }
 }
 
-impl Error for PriorityError {}
-
 impl From<ParseFloatError> for PriorityError {
     fn from(value: ParseFloatError) -> Self {
         PriorityError::ParseError(value)
@@ -44,17 +42,18 @@ impl From<PriorityRangeError> for PriorityError {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+impl Error for PriorityError {}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Priority(f32);
 
 impl Priority {
     /// Creates the attribute from the valid underlying value.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::Priority;
+    /// # use sitemaps::attribute::{Attribute, Priority};
     /// let frequency = Priority::new(0.5f32).unwrap();
-    /// assert_eq!(frequency.as_underlying(), 0.5f32);
+    /// assert_eq!(frequency.underlying(), 0.5f32);
     /// ```
     pub fn new(priority: f32) -> Result<Self, PriorityRangeError> {
         match priority {
@@ -67,34 +66,41 @@ impl Priority {
     pub const MAX: Self = Self(1.);
 }
 
-impl AsAttribute for Priority {
+impl Attribute<f32> for Priority {
     type Error = PriorityError;
 
     /// Parses the attribute from the string.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::{AsAttribute, AsUnderlying};
-    /// # use sitemaps::attribute::Priority;
+    /// # use sitemaps::attribute::{Attribute, Priority};
     /// let frequency = Priority::parse("0.5").unwrap();
-    /// assert_eq!(frequency.as_underlying(), 0.5f32);
+    /// assert_eq!(frequency.underlying(), 0.5f32);
     /// ```
     fn parse(priority: &str) -> Result<Self, Self::Error> {
         let priority = priority.parse()?;
         let priority = Self::new(priority)?;
         Ok(priority)
     }
-}
 
-impl AsUnderlying<f32> for Priority {
+    /// Returns the valid underlying value of the attribute.
+    ///
+    /// ```rust
+    /// # use sitemaps::attribute::{Attribute, Priority};
+    /// let frequency = Priority::parse("0.5").unwrap();
+    /// assert_eq!(frequency.build().as_str(), "0.5");
+    /// ```
+    fn build(&self) -> String {
+        self.0.to_string()
+    }
+
     /// Returns the valid underlying value of the attribute.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::Priority;
+    /// # use sitemaps::attribute::{Attribute, Priority};
     /// let frequency = Priority::new(0.5f32).unwrap();
-    /// assert_eq!(frequency.as_underlying(), 0.5f32);
+    /// assert_eq!(frequency.underlying(), 0.5f32);
     /// ```
-    fn as_underlying(&self) -> f32 {
+    fn underlying(&self) -> f32 {
         self.0
     }
 }
@@ -103,26 +109,6 @@ impl TryFrom<&str> for Priority {
     type Error = PriorityError;
 
     fn try_from(priority: &str) -> Result<Self, Self::Error> {
-        Priority::parse(priority)
-    }
-}
-
-impl TryFrom<f32> for Priority {
-    type Error = PriorityRangeError;
-
-    fn try_from(priority: f32) -> Result<Self, Self::Error> {
-        Priority::new(priority)
-    }
-}
-
-impl From<Priority> for f32 {
-    fn from(priority: Priority) -> f32 {
-        priority.as_underlying()
-    }
-}
-
-impl Display for Priority {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.0)
+        Self::parse(priority)
     }
 }

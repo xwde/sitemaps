@@ -1,14 +1,13 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+use crate::attribute::Attribute;
 use time::error::Parse;
 use time::format_description::well_known::Iso8601;
 use time::OffsetDateTime;
 use timext::error::InParse;
 
-use crate::attribute::{AsAttribute, AsUnderlying};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LastModifiedError {
     CompleteTimestamp(Parse),
     InCompleteTimestamp(InParse),
@@ -37,7 +36,7 @@ impl From<InParse> for LastModifiedError {
 
 impl Error for LastModifiedError {}
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LastModified(OffsetDateTime);
 
 impl LastModified {
@@ -46,21 +45,21 @@ impl LastModified {
     /// ``` rust
     /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
-    /// # use sitemaps::attribute::{AsUnderlying, LastModified};
+    /// # use sitemaps::attribute::{Attribute, LastModified};
     /// let timestamp = OffsetDateTime::parse(
     ///     "1997-07-16T19:20:30.45+01:00",
     ///     &Iso8601::DEFAULT
     /// ).unwrap();
     ///
     /// let location = LastModified::new(timestamp.clone());
-    /// assert_eq!(location.as_underlying(), timestamp);
+    /// assert_eq!(location.underlying(), timestamp);
     /// ```
     pub fn new(time: OffsetDateTime) -> Self {
         Self(time)
     }
 }
 
-impl AsAttribute for LastModified {
+impl Attribute<OffsetDateTime> for LastModified {
     type Error = LastModifiedError;
 
     /// Parses the attribute from the string.
@@ -68,8 +67,7 @@ impl AsAttribute for LastModified {
     /// ```rust
     /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
-    /// # use sitemaps::attribute::{AsAttribute, AsUnderlying};
-    /// # use sitemaps::attribute::LastModified;
+    /// # use sitemaps::attribute::{Attribute, LastModified};
     ///
     /// let raw = "1997-07-16T19:20:30.45+01:00";
     /// let timestamp = OffsetDateTime::parse(
@@ -77,7 +75,7 @@ impl AsAttribute for LastModified {
     /// ).unwrap();
     ///
     /// let location = LastModified::parse(raw).unwrap();
-    /// assert_eq!(location.as_underlying(), timestamp);
+    /// assert_eq!(location.underlying(), timestamp);
     /// ```
     fn parse(last_modified: &str) -> Result<Self, Self::Error> {
         // TODO use InOffsetDateTime & .into_complete() instead
@@ -85,24 +83,32 @@ impl AsAttribute for LastModified {
         let last_modified = OffsetDateTime::parse(last_modified, parsable)?;
         Ok(Self::new(last_modified))
     }
-}
 
-impl AsUnderlying<OffsetDateTime> for LastModified {
+    /// Returns the valid underlying value of the attribute.
+    /// TODO example
+    ///
+    /// ```rust
+    /// ```
+    fn build(&self) -> String {
+        // TODO use InOffsetDateTime instead
+        self.0.format(&Iso8601::DEFAULT).unwrap()
+    }
+
     /// Returns the valid underlying value of the attribute.
     ///
     /// ``` rust
     /// # use time::format_description::well_known::Iso8601;
     /// # use time::OffsetDateTime;
-    /// # use sitemaps::attribute::{AsUnderlying, LastModified};
+    /// # use sitemaps::attribute::{Attribute, LastModified};
     /// let timestamp = OffsetDateTime::parse(
     ///     "1997-07-16T19:20:30.45+01:00",
     ///     &Iso8601::DEFAULT
     /// ).unwrap();
     ///
     /// let location = LastModified::new(timestamp.clone());
-    /// assert_eq!(location.as_underlying(), timestamp);
+    /// assert_eq!(location.underlying(), timestamp);
     /// ```
-    fn as_underlying(&self) -> OffsetDateTime {
+    fn underlying(&self) -> OffsetDateTime {
         self.0
     }
 }
@@ -110,30 +116,7 @@ impl AsUnderlying<OffsetDateTime> for LastModified {
 impl TryFrom<&str> for LastModified {
     type Error = LastModifiedError;
 
-    fn try_from(time: &str) -> Result<Self, Self::Error> {
-        Self::parse(time)
-    }
-}
-
-impl From<OffsetDateTime> for LastModified {
-    fn from(time: OffsetDateTime) -> Self {
-        Self::new(time)
-    }
-}
-
-impl From<LastModified> for OffsetDateTime {
-    fn from(last_modified: LastModified) -> OffsetDateTime {
-        last_modified.as_underlying()
-    }
-}
-
-impl Display for LastModified {
-    ///
-    ///
-    /// ```rust
-    /// ```
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        // TODO use InOffsetDateTime instead
-        write!(f, "{}", self.0.format(&Iso8601::DEFAULT).unwrap())
+    fn try_from(last_modified: &str) -> Result<Self, Self::Error> {
+        Self::parse(last_modified)
     }
 }

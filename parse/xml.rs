@@ -1,11 +1,11 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::Read;
+use std::marker::PhantomData;
 
 use quick_xml::Reader;
 
-use crate::parse::SitemapParser;
-use crate::SitemapRecord;
+use crate::{Record, SitemapRecord};
 
 #[derive(Debug)]
 pub struct XmlParserError {}
@@ -18,19 +18,13 @@ impl Display for XmlParserError {
 
 impl Error for XmlParserError {}
 
-pub struct XmlParser<R: Read> {
+///
+///
+/// ```rust
+/// ```
+pub struct XmlParser<R: Read, D: Record> {
+    record: PhantomData<D>,
     reader: Reader<R>,
 }
 
-impl<R: Read> SitemapParser<R> for XmlParser<R> {
-    type Error = XmlParserError;
-
-    fn create(reader: R) -> Result<Self, Self::Error> {
-        let reader = Reader::from_reader(reader);
-        Ok(Self { reader })
-    }
-
-    fn next(&mut self) -> Result<Option<SitemapRecord>, Self::Error> {
-        todo!()
-    }
-}
+impl<R: Read, D: Record> XmlParser<R, D> {}

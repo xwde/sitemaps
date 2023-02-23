@@ -1,15 +1,16 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::Write;
+use std::marker::PhantomData;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Error as XmlError, Writer};
 
-use crate::attribute::AsUnderlying;
-use crate::build::{IndexBuilder, SitemapBuilder};
-use crate::{IndexRecord, SitemapRecord};
+use crate::attribute::Attribute;
+use crate::{Builder, IndexRecord, Record, SitemapRecord, RECORDS_LIMIT};
 
-#[derive(Debug)]
+// TODO derive PartialEq
+#[derive(Debug, Clone)]
 pub enum XmlBuilderError {
     TooManyRecords,
     TooManyBytes(usize),
@@ -20,7 +21,7 @@ impl Display for XmlBuilderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match &self {
             Self::TooManyRecords => write!(f, "too many records"),
-            Self::TooManyBytes(n) => write!(f, "too many bytes: {n}"),
+            Self::TooManyBytes(n) => write!(f, "too many bytes: {n} over limit"),
             Self::XmlError(e) => Display::fmt(&e, f),
         }
     }
@@ -28,27 +29,42 @@ impl Display for XmlBuilderError {
 
 impl From<XmlError> for XmlBuilderError {
     fn from(error: XmlError) -> Self {
-        XmlBuilderError::XmlError(error)
+        Self::XmlError(error)
     }
 }
 
 impl Error for XmlBuilderError {}
 
-/// Xml Sitemap & Index Builder.
+/// XML format sitemap & sitemap index builder.
 ///
 /// ```rust
-/// # use sitemaps::build::{SitemapStringBuilder, XmlBuilder};
-/// # use sitemaps::SitemapRecord;
-/// let uri = "https://www.example.com/";
-/// let record = SitemapRecord::parse(uri).unwrap();
-/// let records = vec![record /* & more records... */];
-/// let sitemap = XmlBuilder::build_string(records.iter()).unwrap();
+/// # use sitemaps::{Record, SitemapRecord};
+/// # use sitemaps::{Builder, XmlBuilder};
+/// # use sitemaps::attribute::{Attribute, Location};
+/// let mut buffer = Vec::new();
+///
+/// // Replace XmlBuilder with TxtBuilder for Txt Sitemap.
+/// let mut builder = XmlBuilder::initialize(&mut buffer).unwrap();
+///
+/// // Replace SitemapRecord with IndexRecord for Sitemap Index.
+/// let record = "https://example.com/";
+/// let record = Location::parse(record).unwrap();
+/// let record = SitemapRecord::new(record);
+///
+/// builder.next(record).unwrap();
+/// builder.finalize().unwrap();
+///
+/// let sitemap = String::from_utf8_lossy(buffer.as_slice());
+/// let sitemap = sitemap.to_string();
 /// ```
-pub struct XmlBuilder<W: Write> {
+pub struct XmlBuilder<W: Write, D: Record> {
+    record: PhantomData<D>,
+    written_bytes: usize,
+    written_records: usize,
     writer: Writer<W>,
 }
 
-impl<W: Write> XmlBuilder<W> {
+impl<W: Write, D: Record> XmlBuilder<W, D> {
     const XMLNS: [(&'static str, &'static str); 1] =
         [("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9")];
 
@@ -62,94 +78,116 @@ impl<W: Write> XmlBuilder<W> {
     const LAST_MODIFIED: &'static str = "lastmod";
     const CHANGE_FREQUENCY: &'static str = "changefreq";
     const PRIORITY: &'static str = "priority";
-}
 
-impl<W: Write> SitemapBuilder<W> for XmlBuilder<W> {
-    type Error = XmlBuilderError;
-
-    fn create(writer: W) -> Result<Self, Self::Error> {
+    fn new(writer: W, seal: &str) -> Result<Self, XmlBuilderError> {
         let mut writer = Writer::new(writer);
         writer.write_bom()?;
 
-        let tag = BytesStart::new(Self::URL_SET);
+        let tag = BytesStart::new(seal);
         let tag = tag.with_attributes(Self::XMLNS);
         writer.write_event(Event::Start(tag))?;
 
-        Ok(Self { writer })
+        // TODO extensions attributes
+        #[cfg(feature = "extension")]
+        {}
+
+        Ok(Self {
+            record: PhantomData,
+            written_bytes: 0,
+            written_records: 0,
+            writer,
+        })
     }
 
-    fn next(&mut self, record: &SitemapRecord) -> Result<(), Self::Error> {
+    fn seal(mut self, seal: &str) -> Result<W, XmlBuilderError> {
+        let tag = BytesEnd::new(seal);
+        self.writer.write_event(Event::End(tag))?;
+
+        Ok(self.writer.into_inner())
+    }
+}
+
+impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
+    type Error = XmlBuilderError;
+
+    fn initialize(writer: W) -> Result<Self, Self::Error> {
+        Self::new(writer, Self::URL_SET)
+    }
+
+    fn next(&mut self, record: SitemapRecord) -> Result<(), Self::Error> {
+        if self.written_records + 1 > RECORDS_LIMIT {
+            return Err(Self::Error::TooManyRecords);
+        }
+
         let tag = self.writer.create_element(Self::URL);
         tag.write_inner_content(|writer| {
             {
-                let location = record.location.to_string();
+                let location = record.location.build();
                 let location = location.as_str();
                 let tag = writer.create_element(Self::LOCATION);
                 tag.write_text_content(BytesText::new(location))?;
             }
 
             if let Some(last_modified) = &record.last_modified {
-                let last_modified = last_modified.to_string();
+                let last_modified = last_modified.build();
                 let last_modified = last_modified.as_str();
                 let tag = writer.create_element(Self::LAST_MODIFIED);
                 tag.write_text_content(BytesText::new(last_modified))?;
             }
 
             if let Some(change_frequency) = &record.change_frequency {
-                let change_frequency = change_frequency.as_underlying();
+                let change_frequency = change_frequency.build();
+                let change_frequency = change_frequency.as_str();
                 let tag = writer.create_element(Self::CHANGE_FREQUENCY);
                 tag.write_text_content(BytesText::new(change_frequency))?;
             }
 
             if let Some(priority) = &record.priority {
-                let priority = priority.to_string();
+                let priority = priority.build();
                 let priority = priority.as_str();
                 let tag = writer.create_element(Self::PRIORITY);
                 tag.write_text_content(BytesText::new(priority))?;
             }
 
             // TODO extension tags
+            #[cfg(feature = "extension")]
+            {}
 
             Ok(())
         })?;
 
+        self.written_records += 1;
         Ok(())
     }
 
-    fn finalize(mut self) -> Result<W, Self::Error> {
-        let tag = BytesEnd::new(Self::URL_SET);
-        self.writer.write_event(Event::End(tag))?;
-
-        Ok(self.writer.into_inner())
+    fn finalize(self) -> Result<W, Self::Error> {
+        self.seal(Self::URL_SET)
     }
 }
 
-impl<W: Write> IndexBuilder<W> for XmlBuilder<W> {
+impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
     type Error = XmlBuilderError;
 
-    fn create(writer: W) -> Result<Self, Self::Error> {
-        let mut writer = Writer::new(writer);
-        writer.write_bom()?;
-
-        let tag = BytesStart::new(Self::SITEMAP_INDEX);
-        let tag = tag.with_attributes(Self::XMLNS);
-        writer.write_event(Event::Start(tag))?;
-
-        Ok(Self { writer })
+    fn initialize(writer: W) -> Result<Self, Self::Error> {
+        Self::new(writer, Self::SITEMAP_INDEX)
     }
 
-    fn next(&mut self, record: &IndexRecord) -> Result<(), Self::Error> {
+    fn next(&mut self, record: IndexRecord) -> Result<(), Self::Error> {
+        if self.written_records + 1 > RECORDS_LIMIT {
+            return Err(Self::Error::TooManyRecords);
+        }
+
         let tag = self.writer.create_element(Self::SITEMAP);
         tag.write_inner_content(|writer| {
             {
-                let location = record.location.to_string();
+                let location = record.location.build();
                 let location = location.as_str();
                 let tag = writer.create_element(Self::LOCATION);
                 tag.write_text_content(BytesText::new(location))?;
             }
 
             if let Some(last_modified) = &record.last_modified {
-                let last_modified = last_modified.to_string();
+                let last_modified = last_modified.build();
                 let last_modified = last_modified.as_str();
                 let tag = writer.create_element(Self::LAST_MODIFIED);
                 tag.write_text_content(BytesText::new(last_modified))?;
@@ -158,13 +196,11 @@ impl<W: Write> IndexBuilder<W> for XmlBuilder<W> {
             Ok(())
         })?;
 
+        self.written_records += 1;
         Ok(())
     }
 
-    fn finalize(mut self) -> Result<W, Self::Error> {
-        let tag = BytesEnd::new(Self::SITEMAP_INDEX);
-        self.writer.write_event(Event::End(tag))?;
-
-        Ok(self.writer.into_inner())
+    fn finalize(self) -> Result<W, Self::Error> {
+        self.seal(Self::SITEMAP_INDEX)
     }
 }

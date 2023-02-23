@@ -1,9 +1,6 @@
-use std::error::Error;
-use std::io::Write;
-
-use crate::{IndexRecord, SitemapRecord};
-
+#[cfg(feature = "txt")]
 mod txt;
+#[cfg(feature = "txt")]
 pub use txt::*;
 
 #[cfg(feature = "xml")]
@@ -11,80 +8,39 @@ mod xml;
 #[cfg(feature = "xml")]
 pub use xml::*;
 
-pub trait SitemapBuilder<W: Write>: Sized {
+use std::error::Error;
+use std::io::Write;
+
+use crate::record::Record;
+
+pub trait Builder<W: Write, D: Record>: Sized {
     type Error: Error;
 
-    fn build<'re>(
-        writer: W,
-        records: impl Iterator<Item = &'re SitemapRecord>,
-    ) -> Result<W, Self::Error> {
-        let mut state = Self::create(writer)?;
+    fn build(writer: W, records: impl Iterator<Item = D>) -> Result<W, Self::Error> {
+        let mut builder = Self::initialize(writer)?;
         for record in records {
-            state.next(record)?;
+            builder.next(record)?;
         }
 
-        state.finalize()
+        builder.finalize()
     }
 
-    fn create(writer: W) -> Result<Self, Self::Error>;
-    fn next(&mut self, record: &SitemapRecord) -> Result<(), Self::Error>;
+    fn initialize(writer: W) -> Result<Self, Self::Error>;
+    fn next(&mut self, record: D) -> Result<(), Self::Error>;
     fn finalize(self) -> Result<W, Self::Error>;
 }
 
-pub trait SitemapStringBuilder: SitemapBuilder<Vec<u8>> {
-    fn build_string<'re>(
-        records: impl Iterator<Item = &'re SitemapRecord>,
-    ) -> Result<String, Self::Error>;
+pub trait StringBuilder<D: Record>: Builder<Vec<u8>, D> {
+    fn build_string(container: impl Iterator<Item = D>) -> Result<String, Self::Error>;
 }
 
-impl<T> SitemapStringBuilder for T
+impl<D: Record, T> StringBuilder<D> for T
 where
-    T: SitemapBuilder<Vec<u8>>,
+    T: Builder<Vec<u8>, D>,
 {
-    fn build_string<'re>(
-        records: impl Iterator<Item = &'re SitemapRecord>,
-    ) -> Result<String, Self::Error> {
+    fn build_string(records: impl Iterator<Item = D>) -> Result<String, Self::Error> {
         let buffer = Vec::new();
         let buffer = Self::build(buffer, records)?;
-        Ok(String::from_utf8_lossy(buffer.as_slice()).to_string())
-    }
-}
-
-pub trait IndexBuilder<W: Write>: Sized {
-    type Error: Error;
-
-    fn build_index<'re>(
-        writer: W,
-        records: impl Iterator<Item = &'re IndexRecord>,
-    ) -> Result<W, Self::Error> {
-        let mut state = Self::create(writer)?;
-        for record in records {
-            state.next(record)?;
-        }
-
-        state.finalize()
-    }
-
-    fn create(writer: W) -> Result<Self, Self::Error>;
-    fn next(&mut self, record: &IndexRecord) -> Result<(), Self::Error>;
-    fn finalize(self) -> Result<W, Self::Error>;
-}
-
-pub trait IndexStringBuilder: IndexBuilder<Vec<u8>> {
-    fn build_index_string<'re>(
-        records: impl Iterator<Item = &'re IndexRecord>,
-    ) -> Result<String, Self::Error>;
-}
-
-impl<T> IndexStringBuilder for T
-where
-    T: IndexBuilder<Vec<u8>>,
-{
-    fn build_index_string<'re>(
-        records: impl Iterator<Item = &'re IndexRecord>,
-    ) -> Result<String, Self::Error> {
-        let buffer = Vec::new();
-        let buffer = Self::build_index(buffer, records)?;
         Ok(String::from_utf8_lossy(buffer.as_slice()).to_string())
     }
 }

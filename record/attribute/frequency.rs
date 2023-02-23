@@ -1,12 +1,12 @@
-use crate::attribute::{AsAttribute, AsUnderlying};
-
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use time::{ext::NumericalDuration, Date};
 use timext::ext::NumericCalendarDuration;
 
-#[derive(Debug, Clone)]
+use crate::attribute::Attribute;
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChangeFrequencyError;
 
 impl Display for ChangeFrequencyError {
@@ -17,7 +17,7 @@ impl Display for ChangeFrequencyError {
 
 impl Error for ChangeFrequencyError {}
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ChangeFrequency {
     Always,
     Hourly,
@@ -54,7 +54,7 @@ impl ChangeFrequency {
     ///
     /// ```rust
     /// # use time::{Date, Month};
-    /// # use sitemaps::attribute::ChangeFrequency;
+    /// # use sitemaps::attribute::{ChangeFrequency};
     /// let d0 = Date::from_calendar_date(2022, Month::September, 12).unwrap();
     /// let d1 = Date::from_calendar_date(2022, Month::October, 12).unwrap();
     /// let rs = ChangeFrequency::Monthly.next_date(d0).unwrap();
@@ -94,41 +94,47 @@ impl ChangeFrequency {
     }
 }
 
-impl AsAttribute for ChangeFrequency {
+impl Attribute<&'static str> for ChangeFrequency {
     type Error = ChangeFrequencyError;
 
     /// Parses the attribute from the string.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::AsAttribute;
-    /// # use sitemaps::attribute::ChangeFrequency;
+    /// # use sitemaps::attribute::{Attribute, ChangeFrequency};
     /// let frequency = ChangeFrequency::parse("Daily").unwrap();
     /// assert_eq!(frequency, ChangeFrequency::Daily);
     /// ```
     fn parse(frequency: &str) -> Result<Self, Self::Error> {
         Self::new(frequency.trim().to_lowercase().as_str())
     }
-}
 
-impl AsUnderlying<&'static str> for ChangeFrequency {
+    /// Returns the string representation of the attribute.
+    ///
+    /// ```rust
+    /// # use sitemaps::attribute::{Attribute, ChangeFrequency};
+    /// let frequency = ChangeFrequency::new("daily").unwrap();
+    /// assert_eq!(frequency.build().as_str(), "daily");
+    /// ```
+    fn build(&self) -> String {
+        self.underlying().to_string()
+    }
+
     /// Returns the valid underlying value of the attribute.
     ///
     /// ``` rust
-    /// # use sitemaps::attribute::AsUnderlying;
-    /// # use sitemaps::attribute::ChangeFrequency;
+    /// # use sitemaps::attribute::{Attribute, ChangeFrequency};
     /// let frequency = ChangeFrequency::new("daily").unwrap();
-    /// assert_eq!(frequency.as_underlying(), "daily");
+    /// assert_eq!(frequency.underlying(), "daily");
     /// ```
-    fn as_underlying(&self) -> &'static str {
-        use ChangeFrequency::*;
+    fn underlying(&self) -> &'static str {
         match self {
-            Always => "always",
-            Hourly => "hourly",
-            Daily => "daily",
-            Weekly => "weekly",
-            Monthly => "monthly",
-            Yearly => "yearly",
-            Never => "never",
+            Self::Always => "always",
+            Self::Hourly => "hourly",
+            Self::Daily => "daily",
+            Self::Weekly => "weekly",
+            Self::Monthly => "monthly",
+            Self::Yearly => "yearly",
+            Self::Never => "never",
         }
     }
 }
@@ -137,18 +143,6 @@ impl TryFrom<&str> for ChangeFrequency {
     type Error = ChangeFrequencyError;
 
     fn try_from(frequency: &str) -> Result<Self, Self::Error> {
-        ChangeFrequency::new(frequency)
-    }
-}
-
-impl From<ChangeFrequency> for &str {
-    fn from(frequency: ChangeFrequency) -> &'static str {
-        frequency.as_underlying()
-    }
-}
-
-impl Display for ChangeFrequency {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.as_underlying())
+        Self::parse(frequency)
     }
 }
