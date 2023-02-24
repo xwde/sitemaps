@@ -66,6 +66,19 @@ impl Priority {
     pub const MAX: Self = Self(1.);
 }
 
+impl Display for Priority {
+    /// Returns the valid underlying value of the attribute.
+    ///
+    /// ```rust
+    /// # use sitemaps::attribute::{Attribute, Priority};
+    /// let frequency = Priority::parse("0.5").unwrap();
+    /// assert_eq!(frequency.to_string(), "0.5");
+    /// ```
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        Display::fmt(self.0.to_string().as_str(), f)
+    }
+}
+
 impl Attribute<f32> for Priority {
     type Error = PriorityError;
 
@@ -80,17 +93,6 @@ impl Attribute<f32> for Priority {
         let priority = priority.parse()?;
         let priority = Self::new(priority)?;
         Ok(priority)
-    }
-
-    /// Returns the valid underlying value of the attribute.
-    ///
-    /// ```rust
-    /// # use sitemaps::attribute::{Attribute, Priority};
-    /// let frequency = Priority::parse("0.5").unwrap();
-    /// assert_eq!(frequency.build().as_str(), "0.5");
-    /// ```
-    fn build(&self) -> String {
-        self.0.to_string()
     }
 
     /// Returns the valid underlying value of the attribute.

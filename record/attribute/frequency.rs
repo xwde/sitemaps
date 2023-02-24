@@ -94,6 +94,19 @@ impl ChangeFrequency {
     }
 }
 
+impl Display for ChangeFrequency {
+    /// Returns the string representation of the attribute.
+    ///
+    /// ```rust
+    /// # use sitemaps::attribute::{Attribute, ChangeFrequency};
+    /// let frequency = ChangeFrequency::new("daily").unwrap();
+    /// assert_eq!(frequency.to_string(), "daily");
+    /// ```
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        Display::fmt(self.underlying(), f)
+    }
+}
+
 impl Attribute<&'static str> for ChangeFrequency {
     type Error = ChangeFrequencyError;
 
@@ -106,17 +119,6 @@ impl Attribute<&'static str> for ChangeFrequency {
     /// ```
     fn parse(frequency: &str) -> Result<Self, Self::Error> {
         Self::new(frequency.trim().to_lowercase().as_str())
-    }
-
-    /// Returns the string representation of the attribute.
-    ///
-    /// ```rust
-    /// # use sitemaps::attribute::{Attribute, ChangeFrequency};
-    /// let frequency = ChangeFrequency::new("daily").unwrap();
-    /// assert_eq!(frequency.build().as_str(), "daily");
-    /// ```
-    fn build(&self) -> String {
-        self.underlying().to_string()
     }
 
     /// Returns the valid underlying value of the attribute.

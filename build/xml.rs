@@ -6,8 +6,9 @@ use std::marker::PhantomData;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Error as XmlError, Writer};
 
-use crate::attribute::Attribute;
-use crate::{Builder, IndexRecord, Record, SitemapRecord, RECORDS_LIMIT};
+use crate::build::Builder;
+use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
+use crate::{IndexRecord, Record, SitemapRecord};
 
 // TODO derive PartialEq
 #[derive(Debug, Clone)]
@@ -35,27 +36,26 @@ impl From<XmlError> for XmlBuilderError {
 
 impl Error for XmlBuilderError {}
 
-/// XML format sitemap & sitemap index builder.
+///
 ///
 /// ```rust
-/// # use sitemaps::{Record, SitemapRecord};
-/// # use sitemaps::{Builder, XmlBuilder};
-/// # use sitemaps::attribute::{Attribute, Location};
-/// let mut buffer = Vec::new();
+/// use sitemaps::attribute::{Attribute, Location};
+/// use sitemaps::build::{Builder, XmlBuilder};
+/// use sitemaps::{Record, SitemapRecord};
 ///
 /// // Replace XmlBuilder with TxtBuilder for Txt Sitemap.
-/// let mut builder = XmlBuilder::initialize(&mut buffer).unwrap();
+/// let mut builder = XmlBuilder::initialize(Vec::new()).unwrap();
 ///
 /// // Replace SitemapRecord with IndexRecord for Sitemap Index.
 /// let record = "https://example.com/";
 /// let record = Location::parse(record).unwrap();
 /// let record = SitemapRecord::new(record);
 ///
-/// builder.next(record).unwrap();
-/// builder.finalize().unwrap();
+/// builder.next(&record).unwrap();
+/// let buffer = builder.finalize().unwrap();
 ///
 /// let sitemap = String::from_utf8_lossy(buffer.as_slice());
-/// let sitemap = sitemap.to_string();
+/// println!("{}", sitemap.to_string());
 /// ```
 pub struct XmlBuilder<W: Write, D: Record> {
     record: PhantomData<D>,
@@ -114,36 +114,42 @@ impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
         Self::new(writer, Self::URL_SET)
     }
 
-    fn next(&mut self, record: SitemapRecord) -> Result<(), Self::Error> {
+    // TODO count bytes
+    fn next(&mut self, record: &SitemapRecord) -> Result<(), Self::Error> {
         if self.written_records + 1 > RECORDS_LIMIT {
             return Err(Self::Error::TooManyRecords);
+        }
+
+        if self.written_bytes > BYTES_LIMIT {
+            let over_limit = self.written_bytes - BYTES_LIMIT;
+            return Err(Self::Error::TooManyBytes(over_limit));
         }
 
         let tag = self.writer.create_element(Self::URL);
         tag.write_inner_content(|writer| {
             {
-                let location = record.location.build();
+                let location = record.location.to_string();
                 let location = location.as_str();
                 let tag = writer.create_element(Self::LOCATION);
                 tag.write_text_content(BytesText::new(location))?;
             }
 
             if let Some(last_modified) = &record.last_modified {
-                let last_modified = last_modified.build();
+                let last_modified = last_modified.to_string();
                 let last_modified = last_modified.as_str();
                 let tag = writer.create_element(Self::LAST_MODIFIED);
                 tag.write_text_content(BytesText::new(last_modified))?;
             }
 
             if let Some(change_frequency) = &record.change_frequency {
-                let change_frequency = change_frequency.build();
+                let change_frequency = change_frequency.to_string();
                 let change_frequency = change_frequency.as_str();
                 let tag = writer.create_element(Self::CHANGE_FREQUENCY);
                 tag.write_text_content(BytesText::new(change_frequency))?;
             }
 
             if let Some(priority) = &record.priority {
-                let priority = priority.build();
+                let priority = priority.to_string();
                 let priority = priority.as_str();
                 let tag = writer.create_element(Self::PRIORITY);
                 tag.write_text_content(BytesText::new(priority))?;
@@ -163,6 +169,14 @@ impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
     fn finalize(self) -> Result<W, Self::Error> {
         self.seal(Self::URL_SET)
     }
+
+    fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+
+    fn written_records(&self) -> usize {
+        self.written_records
+    }
 }
 
 impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
@@ -172,22 +186,28 @@ impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
         Self::new(writer, Self::SITEMAP_INDEX)
     }
 
-    fn next(&mut self, record: IndexRecord) -> Result<(), Self::Error> {
+    // TODO count bytes
+    fn next(&mut self, record: &IndexRecord) -> Result<(), Self::Error> {
         if self.written_records + 1 > RECORDS_LIMIT {
             return Err(Self::Error::TooManyRecords);
+        }
+
+        if self.written_bytes > BYTES_LIMIT {
+            let over_limit = self.written_bytes - BYTES_LIMIT;
+            return Err(Self::Error::TooManyBytes(over_limit));
         }
 
         let tag = self.writer.create_element(Self::SITEMAP);
         tag.write_inner_content(|writer| {
             {
-                let location = record.location.build();
+                let location = record.location.to_string();
                 let location = location.as_str();
                 let tag = writer.create_element(Self::LOCATION);
                 tag.write_text_content(BytesText::new(location))?;
             }
 
             if let Some(last_modified) = &record.last_modified {
-                let last_modified = last_modified.build();
+                let last_modified = last_modified.to_string();
                 let last_modified = last_modified.as_str();
                 let tag = writer.create_element(Self::LAST_MODIFIED);
                 tag.write_text_content(BytesText::new(last_modified))?;
@@ -202,5 +222,13 @@ impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
 
     fn finalize(self) -> Result<W, Self::Error> {
         self.seal(Self::SITEMAP_INDEX)
+    }
+
+    fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+
+    fn written_records(&self) -> usize {
+        self.written_records
     }
 }

@@ -4,7 +4,9 @@ use std::io::{BufRead, BufReader, Error as IoError, Read, Take};
 use std::marker::PhantomData;
 
 use crate::attribute::{Attribute, Location};
-use crate::{Parser, Record, SitemapRecord, BYTES_LIMIT, RECORDS_LIMIT};
+use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT, RESOURCE_LENGTH_LIMIT};
+use crate::parse::Parser;
+use crate::{Record, SitemapRecord};
 
 #[derive(Debug)]
 pub enum TxtParserError {
@@ -36,6 +38,18 @@ impl Error for TxtParserError {}
 ///
 ///
 /// ```rust
+/// use sitemaps::parse::{Parser, TxtParser};
+///
+/// // Pretend it's our reader
+/// let mut buffer = "https://example.com/".as_bytes();
+///
+/// // Replace TxtParser with XmlParser for Xml Sitemap.
+/// let mut parser = TxtParser::initialize(&mut buffer).unwrap();
+/// while let Some(record) = parser.next().ok().flatten() {
+///     println!("{}", record.location.to_string());
+/// }
+///
+/// parser.finalize().unwrap();
 /// ```
 pub struct TxtParser<R: Read, D: Record> {
     record: PhantomData<D>,
@@ -45,10 +59,8 @@ pub struct TxtParser<R: Read, D: Record> {
 }
 
 impl<R: Read, D: Record> TxtParser<R, D> {
-    const MAX_URL_LENGTH: u64 = 16_384;
-
     fn new(reader: R) -> Result<Self, TxtParserError> {
-        let reader = BufReader::new(reader).take(Self::MAX_URL_LENGTH);
+        let reader = BufReader::new(reader).take(RESOURCE_LENGTH_LIMIT as u64);
         Ok(Self {
             record: PhantomData,
             read_bytes: 0,
@@ -102,5 +114,13 @@ impl<R: Read> Parser<R, SitemapRecord> for TxtParser<R, SitemapRecord> {
 
     fn finalize(self) -> Result<R, Self::Error> {
         Ok(self.reader.into_inner().into_inner())
+    }
+
+    fn read_bytes(&self) -> usize {
+        self.read_bytes
+    }
+
+    fn read_records(&self) -> usize {
+        self.read_records
     }
 }

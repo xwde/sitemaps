@@ -1,6 +1,4 @@
-#[cfg(any(feature = "txt", feature = "xml"))]
 mod location;
-#[cfg(any(feature = "txt", feature = "xml"))]
 pub use location::*;
 
 #[cfg(feature = "xml")]
@@ -18,11 +16,11 @@ pub use modified::*;
 pub use priority::*;
 
 use std::error::Error;
+use std::fmt::Display;
 
-pub trait Attribute<T>: Sized {
+pub trait Attribute<T>: Sized + Display {
     type Error: Error;
 
     fn parse(attribute: &str) -> Result<Self, Self::Error>;
-    fn build(&self) -> String;
     fn underlying(&self) -> T;
 }

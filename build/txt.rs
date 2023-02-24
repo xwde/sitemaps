@@ -3,8 +3,9 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::{Error as IoError, Write};
 use std::marker::PhantomData;
 
-use crate::attribute::Attribute;
-use crate::{Builder, Record, SitemapRecord, BYTES_LIMIT, RECORDS_LIMIT};
+use crate::build::Builder;
+use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
+use crate::{Record, SitemapRecord};
 
 // TODO derive PartialEq, Clone
 #[derive(Debug)]
@@ -32,27 +33,26 @@ impl From<IoError> for TxtBuilderError {
 
 impl Error for TxtBuilderError {}
 
-/// TXT format sitemap builder.
+///
 ///
 /// ```rust
-/// # use sitemaps::{Record, SitemapRecord};
-/// # use sitemaps::{Builder, TxtBuilder};
-/// # use sitemaps::attribute::{Attribute, Location};
-/// let mut buffer = Vec::new();
+/// use sitemaps::attribute::{Attribute, Location};
+/// use sitemaps::build::{Builder, TxtBuilder};
+/// use sitemaps::{Record, SitemapRecord};
 ///
-/// // Replace TxtBuilder with XmlBuilder for Xml Sitemap.
-/// let mut builder = TxtBuilder::initialize(&mut buffer).unwrap();
+/// // Replace TxtBuilder with XmlBuilder for Txt Sitemap.
+/// let mut builder = TxtBuilder::initialize(Vec::new()).unwrap();
 ///
 /// // Replace SitemapRecord with IndexRecord for Sitemap Index.
 /// let record = "https://example.com/";
 /// let record = Location::parse(record).unwrap();
 /// let record = SitemapRecord::new(record);
 ///
-/// builder.next(record).unwrap();
-/// builder.finalize().unwrap();
+/// builder.next(&record).unwrap();
+/// let buffer = builder.finalize().unwrap();
 ///
 /// let sitemap = String::from_utf8_lossy(buffer.as_slice());
-/// let sitemap = sitemap.to_string();
+/// println!("{}", sitemap.to_string());
 /// ```
 pub struct TxtBuilder<W: Write, D: Record> {
     record: PhantomData<D>,
@@ -81,12 +81,12 @@ impl<W: Write> Builder<W, SitemapRecord> for TxtBuilder<W, SitemapRecord> {
         Self::new(writer)
     }
 
-    fn next(&mut self, record: SitemapRecord) -> Result<(), Self::Error> {
+    fn next(&mut self, record: &SitemapRecord) -> Result<(), Self::Error> {
         if self.written_records + 1 > RECORDS_LIMIT {
             return Err(TxtBuilderError::TooManyRecords);
         }
 
-        let record = record.location.build();
+        let record = record.location.to_string();
         let record = record.as_str();
 
         let expected_bytes = record.len() + Self::NEWLINE.len();
@@ -104,5 +104,13 @@ impl<W: Write> Builder<W, SitemapRecord> for TxtBuilder<W, SitemapRecord> {
 
     fn finalize(self) -> Result<W, Self::Error> {
         Ok(self.writer)
+    }
+
+    fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+
+    fn written_records(&self) -> usize {
+        self.written_records
     }
 }

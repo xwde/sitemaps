@@ -48,6 +48,21 @@ impl Location {
     }
 }
 
+impl Display for Location {
+    /// Returns the string representation of the attribute.
+    ///
+    /// ```rust
+    /// # use url::Url;
+    /// # use sitemaps::attribute::{Attribute, Location};
+    /// let link = "https://www.google.com/";
+    /// let location = Location::parse(link).unwrap();
+    /// assert_eq!(location.to_string(), link);
+    /// ```
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        Display::fmt(self.0.as_str(), f)
+    }
+}
+
 impl Attribute<Url> for Location {
     type Error = LocationError;
 
@@ -63,19 +78,6 @@ impl Attribute<Url> for Location {
     fn parse(location: &str) -> Result<Self, Self::Error> {
         let location = Url::parse(location)?;
         Ok(Self::new(location))
-    }
-
-    /// Returns the string representation of the attribute.
-    ///
-    /// ```rust
-    /// # use url::Url;
-    /// # use sitemaps::attribute::{Attribute, Location};
-    /// let link = "https://www.google.com/";
-    /// let location = Location::parse(link).unwrap();
-    /// assert_eq!(location.build().as_str(), link);
-    /// ```
-    fn build(&self) -> String {
-        self.0.to_string()
     }
 
     /// Returns the valid underlying value of the attribute.
