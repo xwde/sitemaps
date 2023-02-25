@@ -15,14 +15,17 @@ Following features available:
 #### parser
 
 ```rust
-use sitemaps::parse::{Parser, TxtParser};
+use sitemaps::parse::{Parser, XmlParser};
+use sitemaps::SitemapRecord;
 
 fn main() {
-    // Pretend it's our reader.                                          
+    // Pretend it's our reader.                                                           
     let mut buffer = "https://example.com/".as_bytes();
 
-    // Replace TxtParser with XmlParser for Xml Sitemap.                
-    let mut parser = TxtParser::initialize(&mut buffer).unwrap();
+    // Replace XmlParser with TxtParser for Xml Sitemap.
+    // Replace SitemapRecord with IndexRecord for Sitemap Index.
+    let mut parser = XmlParser::<_, SitemapRecord>::initialize(&mut buffer).unwrap();
+
     while let Some(record) = parser.next().ok().flatten() {
         println!("{}", record.location.to_string());
     }
@@ -39,8 +42,8 @@ use sitemaps::build::{Builder, TxtBuilder};
 use sitemaps::{Record, SitemapRecord};
 
 fn main() {
-    // Replace XmlBuilder with TxtBuilder for Txt Sitemap.             
-    let mut builder = TxtBuilder::initialize(Vec::new()).unwrap();
+    // Replace TxtBuilder with XmlBuilder for Xml Sitemap.             
+    let mut builder = XmlParser::initialize(Vec::new()).unwrap();
 
     // Replace SitemapRecord with IndexRecord for Sitemap Index.       
     let record = "https://example.com/";

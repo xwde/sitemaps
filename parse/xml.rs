@@ -22,6 +22,21 @@ impl Error for XmlParserError {}
 ///
 ///
 /// ```rust
+/// # use sitemaps::parse::{Parser, XmlParser};
+/// # use sitemaps::SitemapRecord;
+///
+/// // Pretend it's our reader.
+/// let mut buffer = "https://example.com/".as_bytes();
+///
+/// // Replace XmlParser with TxtParser for Xml Sitemap.
+/// // Replace SitemapRecord with IndexRecord for Sitemap Index.
+/// let mut parser = XmlParser::<_, SitemapRecord>::initialize(&mut buffer).unwrap();
+///
+/// while let Some(record) = parser.next().ok().flatten() {
+///     println!("{}", record.location.to_string());
+/// }
+///
+/// parser.finalize().unwrap();
 /// ```
 pub struct XmlParser<R: Read, D: Record> {
     record: PhantomData<D>,
@@ -59,7 +74,7 @@ impl<R: Read, D: Record> ParserStat for XmlParser<R, D> {
 impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
     type Error = XmlParserError;
 
-    fn new(reader: R) -> Result<Self, Self::Error> {
+    fn initialize(reader: R) -> Result<Self, Self::Error> {
         todo!()
     }
 
@@ -75,7 +90,7 @@ impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
 impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, IndexRecord> {
     type Error = XmlParserError;
 
-    fn new(reader: R) -> Result<Self, Self::Error> {
+    fn initialize(reader: R) -> Result<Self, Self::Error> {
         todo!()
     }
 
@@ -85,27 +100,5 @@ impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, IndexRecord> {
 
     fn finalize(self) -> Result<R, Self::Error> {
         todo!()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::parse::{Parser, XmlParser};
-    use crate::SitemapRecord;
-
-    #[test]
-    fn foo() {
-        // Pretend it's our reader.
-        let mut buffer = "https://example.com/".as_bytes();
-
-        // Replace XmlParser with TxtParser for Xml Sitemap.
-        let mut parser = XmlParser::<_, SitemapRecord>::new(&mut buffer).unwrap();
-        // let record: SitemapRecord = parser.next().unwrap().unwrap();
-
-        while let Some(record) = parser.next().ok().flatten() {
-            println!("{}", record.location.to_string());
-        }
-
-        parser.finalize().unwrap();
     }
 }

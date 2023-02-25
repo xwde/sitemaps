@@ -34,7 +34,7 @@ pub trait BuilderStat {
 pub trait Builder<W: Write, D: Record>: Sized {
     type Error: Error;
 
-    fn new(writer: W) -> Result<Self, Self::Error>;
+    fn initialize(writer: W) -> Result<Self, Self::Error>;
     fn next(&mut self, record: &D) -> Result<(), Self::Error>;
     fn finalize(self) -> Result<W, Self::Error>;
 }
@@ -48,7 +48,7 @@ where
     T: Builder<W, D>,
 {
     fn build(writer: W, records: impl Iterator<Item = &'re D>) -> Result<W, Self::Error> {
-        let mut builder = Self::new(writer)?;
+        let mut builder = Self::initialize(writer)?;
         for record in records {
             builder.next(record)?;
         }

@@ -41,7 +41,7 @@ impl Error for TxtBuilderError {}
 /// use sitemaps::{Record, SitemapRecord};
 ///
 /// // Replace TxtBuilder with XmlBuilder for Txt Sitemap.
-/// let mut builder = TxtBuilder::new(Vec::new()).unwrap();
+/// let mut builder = TxtBuilder::initialize(Vec::new()).unwrap();
 ///
 /// // Replace SitemapRecord with IndexRecord for Sitemap Index.
 /// let record = "https://example.com/";
@@ -87,7 +87,7 @@ impl<W: Write, D: Record> BuilderStat for TxtBuilder<W, D> {
 impl<W: Write> Builder<W, SitemapRecord> for TxtBuilder<W, SitemapRecord> {
     type Error = TxtBuilderError;
 
-    fn new(writer: W) -> Result<Self, Self::Error> {
+    fn initialize(writer: W) -> Result<Self, Self::Error> {
         Self::new(writer)
     }
 

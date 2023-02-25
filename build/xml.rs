@@ -44,7 +44,7 @@ impl Error for XmlBuilderError {}
 /// use sitemaps::{Record, SitemapRecord};
 ///
 /// // Replace XmlBuilder with TxtBuilder for Txt Sitemap.
-/// let mut builder = XmlBuilder::new(Vec::new()).unwrap();
+/// let mut builder = XmlBuilder::initialize(Vec::new()).unwrap();
 ///
 /// // Replace SitemapRecord with IndexRecord for Sitemap Index.
 /// let record = "https://example.com/";
@@ -120,7 +120,7 @@ impl<W: Write, D: Record> BuilderStat for XmlBuilder<W, D> {
 impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
     type Error = XmlBuilderError;
 
-    fn new(writer: W) -> Result<Self, Self::Error> {
+    fn initialize(writer: W) -> Result<Self, Self::Error> {
         Self::new(writer, Self::URL_SET)
     }
 
@@ -184,7 +184,7 @@ impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
 impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
     type Error = XmlBuilderError;
 
-    fn new(writer: W) -> Result<Self, Self::Error> {
+    fn initialize(writer: W) -> Result<Self, Self::Error> {
         Self::new(writer, Self::SITEMAP_INDEX)
     }
 

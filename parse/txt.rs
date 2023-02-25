@@ -44,7 +44,7 @@ impl Error for TxtParserError {}
 /// let mut buffer = "https://example.com/".as_bytes();
 ///
 /// // Replace TxtParser with XmlParser for Xml Sitemap.
-/// let mut parser = TxtParser::new(&mut buffer).unwrap();
+/// let mut parser = TxtParser::initialize(&mut buffer).unwrap();
 /// while let Some(record) = parser.next().ok().flatten() {
 ///     println!("{}", record.location.to_string());
 /// }
@@ -115,7 +115,7 @@ impl<R: Read, D: Record> ParserStat for TxtParser<R, D> {
 impl<R: Read> Parser<R, SitemapRecord> for TxtParser<R, SitemapRecord> {
     type Error = TxtParserError;
 
-    fn new(reader: R) -> Result<Self, Self::Error> {
+    fn initialize(reader: R) -> Result<Self, Self::Error> {
         Self::new(reader)
     }
 
