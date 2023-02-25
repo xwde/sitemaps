@@ -59,7 +59,7 @@ impl<R: Read, D: Record> ParserStat for XmlParser<R, D> {
 impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
     type Error = XmlParserError;
 
-    fn initialize(reader: R) -> Result<Self, Self::Error> {
+    fn new(reader: R) -> Result<Self, Self::Error> {
         todo!()
     }
 
@@ -72,10 +72,10 @@ impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
     }
 }
 
-impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, SitemapRecord> {
+impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, IndexRecord> {
     type Error = XmlParserError;
 
-    fn initialize(reader: R) -> Result<Self, Self::Error> {
+    fn new(reader: R) -> Result<Self, Self::Error> {
         todo!()
     }
 
@@ -91,6 +91,7 @@ impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, SitemapRecord> {
 #[cfg(test)]
 mod tests {
     use crate::parse::{Parser, XmlParser};
+    use crate::SitemapRecord;
 
     #[test]
     fn foo() {
@@ -98,7 +99,7 @@ mod tests {
         let mut buffer = "https://example.com/".as_bytes();
 
         // Replace XmlParser with TxtParser for Xml Sitemap.
-        let mut parser = XmlParser::initialize(&mut buffer).unwrap();
+        let mut parser = XmlParser::<_, SitemapRecord>::new(&mut buffer).unwrap();
         // let record: SitemapRecord = parser.next().unwrap().unwrap();
 
         while let Some(record) = parser.next().ok().flatten() {

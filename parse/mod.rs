@@ -34,7 +34,7 @@ pub trait ParserStat {
 pub trait Parser<R: Read, D: Record>: Sized {
     type Error: Error;
 
-    fn initialize(reader: R) -> Result<Self, Self::Error>;
+    fn new(reader: R) -> Result<Self, Self::Error>;
     fn next(&mut self) -> Result<Option<D>, Self::Error>;
     fn finalize(self) -> Result<R, Self::Error>;
 }
