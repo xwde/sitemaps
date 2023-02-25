@@ -5,11 +5,11 @@ use std::marker::PhantomData;
 
 use quick_xml::Reader;
 
-use crate::parse::Parser;
-use crate::{IndexRecord, Record, SitemapRecord};
+use crate::parse::{Parser, ParserStat};
+use crate::{AutodefRecord, IndexRecord, Record, SitemapRecord};
 
 #[derive(Debug)]
-pub enum XmlParserError {}
+pub struct XmlParserError {}
 
 impl Display for XmlParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
@@ -30,7 +30,31 @@ pub struct XmlParser<R: Read, D: Record> {
     reader: Reader<R>,
 }
 
-impl<R: Read, D: Record> XmlParser<R, D> {}
+impl<R: Read, D: Record> XmlParser<R, D> {
+    fn new(reader: R) -> Self {
+        let reader = Reader::from_reader(reader);
+        Self {
+            record: PhantomData,
+            read_bytes: 0,
+            read_records: 0,
+            reader,
+        }
+    }
+
+    fn try_next(&mut self) -> Result<Option<AutodefRecord>, XmlParserError> {
+        todo!()
+    }
+}
+
+impl<R: Read, D: Record> ParserStat for XmlParser<R, D> {
+    fn read_bytes(&self) -> usize {
+        self.read_bytes
+    }
+
+    fn read_records(&self) -> usize {
+        self.read_records
+    }
+}
 
 impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
     type Error = XmlParserError;
@@ -46,17 +70,9 @@ impl<R: Read> Parser<R, SitemapRecord> for XmlParser<R, SitemapRecord> {
     fn finalize(self) -> Result<R, Self::Error> {
         todo!()
     }
-
-    fn read_bytes(&self) -> usize {
-        todo!()
-    }
-
-    fn read_records(&self) -> usize {
-        todo!()
-    }
 }
 
-impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, IndexRecord> {
+impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, SitemapRecord> {
     type Error = XmlParserError;
 
     fn initialize(reader: R) -> Result<Self, Self::Error> {
@@ -70,12 +86,25 @@ impl<R: Read> Parser<R, IndexRecord> for XmlParser<R, IndexRecord> {
     fn finalize(self) -> Result<R, Self::Error> {
         todo!()
     }
+}
 
-    fn read_bytes(&self) -> usize {
-        todo!()
-    }
+#[cfg(test)]
+mod tests {
+    use crate::parse::{Parser, XmlParser};
 
-    fn read_records(&self) -> usize {
-        todo!()
+    #[test]
+    fn foo() {
+        // Pretend it's our reader.
+        let mut buffer = "https://example.com/".as_bytes();
+
+        // Replace XmlParser with TxtParser for Xml Sitemap.
+        let mut parser = XmlParser::initialize(&mut buffer).unwrap();
+        // let record: SitemapRecord = parser.next().unwrap().unwrap();
+
+        while let Some(record) = parser.next().ok().flatten() {
+            println!("{}", record.location.to_string());
+        }
+
+        parser.finalize().unwrap();
     }
 }

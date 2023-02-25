@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::io::{Error as IoError, Write};
 use std::marker::PhantomData;
 
-use crate::build::Builder;
+use crate::build::{Builder, BuilderStat};
 use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
 use crate::{Record, SitemapRecord};
 
@@ -74,6 +74,16 @@ impl<W: Write, D: Record> TxtBuilder<W, D> {
     }
 }
 
+impl<W: Write, D: Record> BuilderStat for TxtBuilder<W, D> {
+    fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+
+    fn written_records(&self) -> usize {
+        self.written_records
+    }
+}
+
 impl<W: Write> Builder<W, SitemapRecord> for TxtBuilder<W, SitemapRecord> {
     type Error = TxtBuilderError;
 
@@ -104,13 +114,5 @@ impl<W: Write> Builder<W, SitemapRecord> for TxtBuilder<W, SitemapRecord> {
 
     fn finalize(self) -> Result<W, Self::Error> {
         Ok(self.writer)
-    }
-
-    fn written_bytes(&self) -> usize {
-        self.written_bytes
-    }
-
-    fn written_records(&self) -> usize {
-        self.written_records
     }
 }

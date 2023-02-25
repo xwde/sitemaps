@@ -8,8 +8,8 @@ Rust programming language with the support of `txt`, `xml` formats and `video`,
 
 Following features available:
 
-- `txt` to enable .txt parser & builder.
-- `xml` to enable .xml parser & builder.
+- `txt` to enable `.txt` sitemap parser & builder.
+- `xml` to enable `.xml` sitemap and index parser & builder.
 - `extension` to enable all extensions.
 
 #### parser
@@ -18,12 +18,10 @@ Following features available:
 use sitemaps::parse::{Parser, TxtParser};
 
 fn main() {
-    use sitemaps::parse::{Parser, TxtParser};
-
-    // Pretend it's our reader                                    
+    // Pretend it's our reader.                                          
     let mut buffer = "https://example.com/".as_bytes();
 
-    // Replace TxtParser with XmlParser for Xml Sitemap.          
+    // Replace TxtParser with XmlParser for Xml Sitemap.                
     let mut parser = TxtParser::initialize(&mut buffer).unwrap();
     while let Some(record) = parser.next().ok().flatten() {
         println!("{}", record.location.to_string());
@@ -36,15 +34,11 @@ fn main() {
 #### builder
 
 ```rust
-use sitemaps::{Record, SitemapRecord};
-use sitemaps::{Builder, XmlBuilder};
 use sitemaps::attribute::{Attribute, Location};
+use sitemaps::build::{Builder, TxtBuilder};
+use sitemaps::{Record, SitemapRecord};
 
 fn main() {
-    use sitemaps::attribute::{Attribute, Location};
-    use sitemaps::build::{Builder, TxtBuilder};
-    use sitemaps::{Record, SitemapRecord};
-
     // Replace XmlBuilder with TxtBuilder for Txt Sitemap.             
     let mut builder = TxtBuilder::initialize(Vec::new()).unwrap();
 

@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::{Error as XmlError, Writer};
 
-use crate::build::Builder;
+use crate::build::{Builder, BuilderStat};
 use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
 use crate::{IndexRecord, Record, SitemapRecord};
 
@@ -107,6 +107,16 @@ impl<W: Write, D: Record> XmlBuilder<W, D> {
     }
 }
 
+impl<W: Write, D: Record> BuilderStat for XmlBuilder<W, D> {
+    fn written_bytes(&self) -> usize {
+        self.written_bytes
+    }
+
+    fn written_records(&self) -> usize {
+        self.written_records
+    }
+}
+
 impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
     type Error = XmlBuilderError;
 
@@ -169,14 +179,6 @@ impl<W: Write> Builder<W, SitemapRecord> for XmlBuilder<W, SitemapRecord> {
     fn finalize(self) -> Result<W, Self::Error> {
         self.seal(Self::URL_SET)
     }
-
-    fn written_bytes(&self) -> usize {
-        self.written_bytes
-    }
-
-    fn written_records(&self) -> usize {
-        self.written_records
-    }
 }
 
 impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
@@ -222,13 +224,5 @@ impl<W: Write> Builder<W, IndexRecord> for XmlBuilder<W, IndexRecord> {
 
     fn finalize(self) -> Result<W, Self::Error> {
         self.seal(Self::SITEMAP_INDEX)
-    }
-
-    fn written_bytes(&self) -> usize {
-        self.written_bytes
-    }
-
-    fn written_records(&self) -> usize {
-        self.written_records
     }
 }

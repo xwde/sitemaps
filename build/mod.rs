@@ -14,13 +14,7 @@ use std::io::Write;
 use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
 use crate::Record;
 
-pub trait Builder<W: Write, D: Record>: Sized {
-    type Error: Error;
-
-    fn initialize(writer: W) -> Result<Self, Self::Error>;
-    fn next(&mut self, record: &D) -> Result<(), Self::Error>;
-    fn finalize(self) -> Result<W, Self::Error>;
-
+pub trait BuilderStat {
     fn written_bytes(&self) -> usize;
     fn written_records(&self) -> usize;
 
@@ -35,6 +29,14 @@ pub trait Builder<W: Write, D: Record>: Sized {
     fn is_ok(&self) -> bool {
         self.bytes_until_limit() > 0 && self.records_until_limit() > 0
     }
+}
+
+pub trait Builder<W: Write, D: Record>: Sized {
+    type Error: Error;
+
+    fn initialize(writer: W) -> Result<Self, Self::Error>;
+    fn next(&mut self, record: &D) -> Result<(), Self::Error>;
+    fn finalize(self) -> Result<W, Self::Error>;
 }
 
 pub trait IteratorBuilder<'re, W: Write, D: Record + 're>: Builder<W, D> {

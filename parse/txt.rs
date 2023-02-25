@@ -4,8 +4,8 @@ use std::io::{BufRead, BufReader, Error as IoError, Read, Take};
 use std::marker::PhantomData;
 
 use crate::attribute::{Attribute, Location};
-use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT, RESOURCE_LENGTH_LIMIT};
-use crate::parse::Parser;
+use crate::limits::{BYTES_LIMIT, RECORDS_LIMIT};
+use crate::parse::{Parser, ParserStat};
 use crate::{Record, SitemapRecord};
 
 #[derive(Debug)]
@@ -22,7 +22,7 @@ impl Display for TxtParserError {
             Self::TooManyRecords => write!(f, "too many records"),
             Self::TooManyBytes(n) => write!(f, "too many bytes: {n} over limit"),
             Self::IoError(e) => Display::fmt(&e, f),
-            Self::IncorrectFormat => unreachable!(),
+            Self::IncorrectFormat => write!(f, "beep boop"),
         }
     }
 }
@@ -38,9 +38,9 @@ impl Error for TxtParserError {}
 ///
 ///
 /// ```rust
-/// use sitemaps::parse::{Parser, TxtParser};
+/// # use sitemaps::parse::{Parser, TxtParser};
 ///
-/// // Pretend it's our reader
+/// // Pretend it's our reader.
 /// let mut buffer = "https://example.com/".as_bytes();
 ///
 /// // Replace TxtParser with XmlParser for Xml Sitemap.
@@ -59,8 +59,10 @@ pub struct TxtParser<R: Read, D: Record> {
 }
 
 impl<R: Read, D: Record> TxtParser<R, D> {
+    const MAX_URL_LENGTH: u64 = 16_384;
+
     fn new(reader: R) -> Result<Self, TxtParserError> {
-        let reader = BufReader::new(reader).take(RESOURCE_LENGTH_LIMIT as u64);
+        let reader = BufReader::new(reader).take(Self::MAX_URL_LENGTH);
         Ok(Self {
             record: PhantomData,
             read_bytes: 0,
@@ -69,7 +71,7 @@ impl<R: Read, D: Record> TxtParser<R, D> {
         })
     }
 
-    fn try_next(&mut self) -> Result<Option<D>, TxtParserError> {
+    fn try_next(&mut self) -> Result<Option<Location>, TxtParserError> {
         if self.read_records + 1 > RECORDS_LIMIT {
             return Err(TxtParserError::TooManyRecords);
         }
@@ -80,7 +82,12 @@ impl<R: Read, D: Record> TxtParser<R, D> {
         }
 
         let mut line = String::new();
-        self.read_bytes += self.reader.read_line(&mut line)?;
+        let read_bytes_now = self.reader.read_line(&mut line)?;
+        if read_bytes_now == 0 {
+            return Ok(None);
+        }
+
+        self.read_bytes += read_bytes_now;
         self.read_records += 1;
 
         if self.read_bytes > BYTES_LIMIT {
@@ -90,9 +97,18 @@ impl<R: Read, D: Record> TxtParser<R, D> {
 
         let location = Location::parse(line.as_str());
         let location = location.map_err(|_| TxtParserError::IncorrectFormat)?;
-        let record = D::new(location);
 
-        Ok(Some(record))
+        Ok(Some(location))
+    }
+}
+
+impl<R: Read, D: Record> ParserStat for TxtParser<R, D> {
+    fn read_bytes(&self) -> usize {
+        self.read_bytes
+    }
+
+    fn read_records(&self) -> usize {
+        self.read_records
     }
 }
 
@@ -105,22 +121,14 @@ impl<R: Read> Parser<R, SitemapRecord> for TxtParser<R, SitemapRecord> {
 
     fn next(&mut self) -> Result<Option<SitemapRecord>, Self::Error> {
         loop {
-            match self.try_next() {
+            return match self.try_next() {
                 Err(TxtParserError::IncorrectFormat) => continue,
-                x => return x,
-            }
+                x => Ok(x?.map(|loc| SitemapRecord::new(loc))),
+            };
         }
     }
 
     fn finalize(self) -> Result<R, Self::Error> {
         Ok(self.reader.into_inner().into_inner())
-    }
-
-    fn read_bytes(&self) -> usize {
-        self.read_bytes
-    }
-
-    fn read_records(&self) -> usize {
-        self.read_records
     }
 }

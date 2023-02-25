@@ -15,8 +15,8 @@ pub struct SitemapRecord {
     pub priority: Option<Priority>,
 }
 
-impl Record for SitemapRecord {
-    fn new(location: Location) -> Self {
+impl SitemapRecord {
+    pub fn new(location: Location) -> Self {
         Self {
             location,
             #[cfg(feature = "xml")]
@@ -46,6 +46,8 @@ impl SitemapRecord {
         self
     }
 }
+
+impl Record for SitemapRecord {}
 
 impl From<Location> for SitemapRecord {
     fn from(location: Location) -> Self {

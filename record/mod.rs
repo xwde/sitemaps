@@ -12,6 +12,11 @@ mod index;
 #[cfg(feature = "xml")]
 pub use index::*;
 
+#[cfg(feature = "xml")]
+mod autodef;
+#[cfg(feature = "xml")]
+pub use autodef::*;
+
 pub mod limits {
     pub const RECORDS_LIMIT: usize = 50_000;
     pub const BYTES_LIMIT: usize = 52_428_800;
@@ -21,5 +26,5 @@ pub mod limits {
 use crate::attribute::Location;
 
 pub trait Record: Sized {
-    fn new(location: Location) -> Self;
+    // fn new(location: Location) -> Self;
 }

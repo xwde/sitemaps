@@ -8,8 +8,8 @@ pub struct IndexRecord {
     pub last_modified: Option<LastModified>,
 }
 
-impl Record for IndexRecord {
-    fn new(location: Location) -> Self {
+impl IndexRecord {
+    pub fn new(location: Location) -> Self {
         Self {
             location,
             last_modified: None,
@@ -23,6 +23,8 @@ impl IndexRecord {
         self
     }
 }
+
+impl Record for IndexRecord {}
 
 impl From<Location> for IndexRecord {
     fn from(location: Location) -> Self {
